@@ -31,6 +31,7 @@ export default function LoginPage() {
 
       if (error) {
         setError(error.message)
+        setIsLoading(false)
         return
       }
 
@@ -39,22 +40,19 @@ export default function LoginPage() {
       const { data: userData, error: userError } = await supabase.auth.getUser();
       if (userError || !userData?.user) {
         setError("Could not fetch user info.")
+        setIsLoading(false)
         return
       }
 
-      // Fetch the role from the profiles table
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userData.user.id)
-        .single();
-
-      if (profileError) {
-        setError("Could not fetch user role.")
+      // Get the role from user metadata
+      const role = userData.user.user_metadata?.role || userData.user.user_metadata?.userType;
+      if (!role) {
+        setError("Could not fetch user role from metadata.")
+        setIsLoading(false)
         return
       }
-
-      console.log(profile.role); // 'admin', 'agent', 'policyholder', etc.
+      // Optionally, you can use the role here for routing or logic
+      // console.log(role); // 'agent', 'policyholder', etc.
 
       // Redirect to dashboard or home page
       router.push("/dashboard")
