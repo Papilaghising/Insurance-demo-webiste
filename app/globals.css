@@ -1,0 +1,184 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    "Noto Sans", sans-serif;
+  --font-montserrat: "Montserrat", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", sans-serif;
+}
+
+.font-sans {
+  font-family: var(--font-sans);
+}
+
+.font-montserrat {
+  font-family: var(--font-montserrat);
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 201 73% 41%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 201 73% 41%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 201 73% 41%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+.bg-grid-slate-100 {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(226 232 240 / 0.8)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e");
+}
+
+.bg-grid-slate-700 {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(51 65 85 / 0.8)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e");
+}
+
+@layer utilities {
+  /* Text glow effects */
+  .text-glow-sm {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  }
+
+  .text-glow-md {
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+  }
+
+  .text-glow-lg {
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+  }
+
+  /* Glowing elements */
+  .glow-white-sm {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  }
+
+  .glow-white {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+  }
+
+  .glow-blue-sm {
+    box-shadow: 0 0 10px rgba(37, 99, 235, 0.3);
+  }
+
+  .glow-blue {
+    box-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
+  }
+
+  /* Animated glows */
+  @keyframes glow-pulse-blue {
+    0%,
+    100% {
+      box-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
+    }
+    50% {
+      box-shadow: 0 0 40px rgba(37, 99, 235, 0.8);
+    }
+  }
+
+  @keyframes glow-pulse-white {
+    0%,
+    100% {
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    }
+    50% {
+      box-shadow: 0 0 40px rgba(255, 255, 255, 0.8);
+    }
+  }
+
+  .glow-blue-animate {
+    animation: glow-pulse-blue 3s infinite;
+  }
+
+  .glow-white-animate {
+    animation: glow-pulse-white 3s infinite;
+  }
+
+  /* Slow pulse animation */
+  @keyframes pulse-slow {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Glow for underlines and borders */
+  .glow-white {
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+  }
+
+  .glow-blue {
+    filter: drop-shadow(0 0 8px rgba(37, 99, 235, 0.5));
+  }
+}
