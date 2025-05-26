@@ -24,6 +24,3 @@ export function getSupabase() {
   }
   return supabase
 }
-
-// For backward compatibility
-export { supabase }
