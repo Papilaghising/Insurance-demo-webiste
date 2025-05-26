@@ -89,7 +89,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
-      <aside className="w-64 bg-blue-900 text-white flex flex-col px-4 py-6">
+      <aside className="w-64 bg-green-900 text-white flex flex-col px-4 py-6">
         <h1 className="text-2xl font-bold mb-6">My Dashboard</h1>
         <nav className="space-y-4">
           <button className="block w-full text-left" onClick={() => setActiveTab("policies")}>My Policies</button>
@@ -99,7 +99,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
           <button className="block w-full text-left" onClick={() => setActiveTab("about")}>About Me</button>
           <button className="block w-full text-left" onClick={() => setActiveTab("help")}>Help & Support</button>
         </nav>
-        <div className="mt-auto pt-6 border-t border-blue-700">
+        <div className="mt-auto pt-6 border-t border-green-700">
           <div className="flex items-center gap-2">
             <UserCircle className="w-6 h-6" />
             <span>{user?.name ?? "Policyholder"}</span>
@@ -116,21 +116,12 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
         <div>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-semibold text-gray-700 capitalize">{activeTab}</h3>
-            <div className="space-x-2">
-              <button
-                onClick={() => fetchData(activeTab)}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-              >
-                Load {activeTab}
-              </button>
-              {activeTab === "claims" && (
-                <Link href="/dashboard/claims/submit">
-                  <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                    Submit a New Claim
-                  </button>
-                </Link>
-              )}
-            </div>
+            <button
+              onClick={() => fetchData(activeTab)}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            >
+              Load {activeTab}
+            </button>
           </div>
 
           {/* Render based on active tab */}

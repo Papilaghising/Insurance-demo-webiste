@@ -45,7 +45,6 @@ export default function Home() {
           </nav>
           <div className="flex gap-4">
             <Button
-              variant="outline"
               className="hidden md:flex border-white/70 bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 text-base px-6 py-6 shadow-[0_0_15px_rgba(255,255,255,0.3)] hover:shadow-[0_0_20px_rgba(255,255,255,0.5)] transition-all duration-300"
               asChild
             >
@@ -95,7 +94,6 @@ export default function Home() {
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                   <Button
-                    variant="outline"
                     className="border-white/70 bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 h-14 px-8 text-lg transition-all duration-300 shadow-[0_0_15px_rgba(255,255,255,0.3)] hover:shadow-[0_0_25px_rgba(255,255,255,0.5)] hover:scale-105"
                   >
                     Learn More
@@ -456,7 +454,7 @@ export default function Home() {
                   <p className="text-blue-600 mb-4">
                     Reduced claims processing time by 85% and saved $3.2M annually in operational costs.
                   </p>
-                  <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50 w-full">
+                  <Button className="border-blue-600 text-blue-600 hover:bg-blue-50 w-full">
                     Read Case Study
                   </Button>
                 </div>
@@ -474,7 +472,7 @@ export default function Home() {
                   <p className="text-blue-600 mb-4">
                     Improved fraud detection by 76% and increased customer satisfaction scores by 42%.
                   </p>
-                  <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50 w-full">
+                  <Button className="border-blue-600 text-blue-600 hover:bg-blue-50 w-full">
                     Read Case Study
                   </Button>
                 </div>
@@ -492,7 +490,7 @@ export default function Home() {
                   <p className="text-blue-600 mb-4">
                     Automated 92% of claims processing and reduced operational costs by 35%.
                   </p>
-                  <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50 w-full">
+                  <Button className="border-blue-600 text-blue-600 hover:bg-blue-50 w-full">
                     Read Case Study
                   </Button>
                 </div>

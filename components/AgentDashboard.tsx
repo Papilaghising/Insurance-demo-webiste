@@ -1,112 +1,122 @@
 import React, { useState } from "react"
+import { UserCircle } from "lucide-react"
 
 export default function AgentDashboard({ user }: { user: any }) {
   const [policyholders, setPolicyholders] = useState<any[]>([])
   const [policies, setPolicies] = useState<any[]>([])
   const [claims, setClaims] = useState<any[]>([])
+  const [activeTab, setActiveTab] = useState("policyholders")
 
-  const fetchPolicyholders = async () => {
-    const res = await fetch("/api/policyholders") // Update this with your backend endpoint
-    const data = await res.json()
-    setPolicyholders(data)
-  }
+  const fetchData = async (type: string) => {
+    const endpoints: Record<string, string> = {
+      policyholders: "/api/policyholders",
+      policies: "/api/soldpolicies",
+      claims: "/api/claimsdoc"
+    }
+  
+    if (!(type in endpoints)) {
+      console.error("Invalid data type requested:", type);
+      return;
+    }
+  
+    const res = await fetch(endpoints[type]);
+    if (!res.ok) {
+      console.error("Failed to fetch:", res.status, res.statusText);
+      return;
+    }
+    const data = await res.json();
+  
+    if (type === "policyholders") setPolicyholders(data);
+    else if (type === "policies") setPolicies(data);
+    else if (type === "claims") setClaims(data);
+  };  
 
-  const fetchPolicies = async () => {
-    const res = await fetch("/api/soldpolicies") // Update this with your backend endpoint for policies
-    const data = await res.json()
-    setPolicies(data)
-  }
-
-  const fetchClaims = async () => {
-    const res = await fetch("/api/claimsdoc") // Update this with your backend endpoint for claims
-    const data = await res.json()
-    setClaims(data)
+  const renderTable = (data: any[]) => {
+    if (!data.length) return null
+    return (
+      <div className="overflow-auto border rounded-lg shadow">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              {Object.keys(data[0]).map((key) => (
+                <th key={key} className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-left">
+                  {key}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-100">
+            {data.map((row, idx) => (
+              <tr key={idx} className="hover:bg-gray-50">
+                {Object.values(row).map((val, i) => (
+                  <td key={i} className="px-4 py-2 text-sm text-gray-700">
+                    {String(val)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-blue-800 mb-6">Agent Dashboard</h1>
+    <div className="flex h-screen">
+      {/* Sidebar */}
+      <aside className="w-64 bg-blue-900 text-white flex flex-col px-4 py-6">
+        <h1 className="text-2xl font-bold mb-6">Agent Panel</h1>
+        <nav className="space-y-4">
+          <button className="block w-full text-left" onClick={() => setActiveTab("policyholders")}>Policyholders</button>
+          <button className="block w-full text-left" onClick={() => setActiveTab("policies")}>Policies Sold</button>
+          <button className="block w-full text-left" onClick={() => setActiveTab("claims")}>Claims</button>
+        </nav>
+        <div className="mt-auto pt-6 border-t border-blue-700">
+          <div className="flex items-center gap-2">
+            <UserCircle className="w-6 h-6" />
+            <span>{user?.name ?? "Agent"}</span>
+          </div>
+        </div>
+      </aside>
 
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-blue-700 mb-2">All Policyholders</h2>
-        <button onClick={fetchPolicyholders} className="bg-blue-600 text-white px-4 py-2 rounded mb-2">
-          Load Policyholders
-        </button>
-        {policyholders.length > 0 && (
-          <table className="min-w-full bg-white border mt-4">
-            <thead>
-              <tr>
-                {Object.keys(policyholders[0]).map((key) => (
-                  <th key={key} className="border px-2 py-1 text-left text-xs text-gray-700">{key}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {policyholders.map((ph, idx) => (
-                <tr key={idx}>
-                  {Object.values(ph).map((val, i) => (
-                    <td key={i} className="border px-2 py-1 text-xs">{String(val)}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      {/* Main Content */}
+      <main className="flex-1 bg-gray-100 p-8 overflow-y-auto">
+        <div className="mb-6">
+          <h2 className="text-3xl font-semibold text-gray-800">Dashboard</h2>
+        </div>
 
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-blue-700 mb-2">Policies Sold</h2>
-        <button onClick={fetchPolicies} className="bg-blue-600 text-white px-4 py-2 rounded mb-2">
-          Load Policies
-        </button>
-        {policies.length > 0 && (
-          <table className="min-w-full bg-white border mt-4">
-            <thead>
-              <tr>
-                {Object.keys(policies[0]).map((key) => (
-                  <th key={key} className="border px-2 py-1 text-left text-xs text-gray-700">{key}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {policies.map((policy, idx) => (
-                <tr key={idx}>
-                  {Object.values(policy).map((val, i) => (
-                    <td key={i} className="border px-2 py-1 text-xs">{String(val)}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+        {/* Cards Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white shadow rounded-lg p-4">
+            <h3 className="text-sm text-gray-500">Policyholders</h3>
+            <p className="text-2xl font-bold">{policyholders.length}</p>
+          </div>
+          <div className="bg-white shadow rounded-lg p-4">
+            <h3 className="text-sm text-gray-500">Policies</h3>
+            <p className="text-2xl font-bold">{policies.length}</p>
+          </div>
+          <div className="bg-white shadow rounded-lg p-4">
+            <h3 className="text-sm text-gray-500">Claims</h3>
+            <p className="text-2xl font-bold">{claims.length}</p>
+          </div>
+        </div>
 
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-blue-700 mb-2">Claim Documents</h2>
-        <button onClick={fetchClaims} className="bg-blue-600 text-white px-4 py-2 rounded mb-2">
-          Load Claims
-        </button>
-        {claims.length > 0 && (
-          <table className="min-w-full bg-white border mt-4">
-            <thead>
-              <tr>
-                {Object.keys(claims[0]).map((key) => (
-                  <th key={key} className="border px-2 py-1 text-left text-xs text-gray-700">{key}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {claims.map((claim, idx) => (
-                <tr key={idx}>
-                  {Object.values(claim).map((val, i) => (
-                    <td key={i} className="border px-2 py-1 text-xs">{String(val)}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+        {/* Tab Content */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-semibold text-gray-700 capitalize">{activeTab}</h3>
+            <button
+              onClick={() => fetchData(activeTab)}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              Load {activeTab}
+            </button>
+          </div>
+          {activeTab === "policyholders" && renderTable(policyholders)}
+          {activeTab === "policies" && renderTable(policies)}
+          {activeTab === "claims" && renderTable(claims)}
+        </div>
+      </main>
     </div>
   )
 }
