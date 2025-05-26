@@ -96,11 +96,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   ) => {
     try {
       const supabase = getSupabase();
-      // Pass userType and any other options as metadata
+      // Always set 'role' in user_metadata
+      const role = options?.role || options?.userType;
       return await supabase.auth.signUp({
         email,
         password,
-        options: options ? { data: { userType: options.userType, ...options } } : undefined,
+        options: {
+          data: {
+            ...options,
+            role, // ensure 'role' is set
+          }
+        }
       });
     } catch (error) {
       console.error("Sign up error:", error);
