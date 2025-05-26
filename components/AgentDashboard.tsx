@@ -12,13 +12,13 @@ export default function AgentDashboard({ user }: { user: any }) {
   }
 
   const fetchPolicies = async () => {
-    const res = await fetch("/api/policies?soldBy=" + user?.id) // Adjust query as needed
+    const res = await fetch("/api/soldpolicies") // Update this with your backend endpoint for policies
     const data = await res.json()
     setPolicies(data)
   }
 
   const fetchClaims = async () => {
-    const res = await fetch("/api/claims?agentId=" + user?.id) // Adjust query as needed
+    const res = await fetch("/api/claimsdoc") // Update this with your backend endpoint for claims
     const data = await res.json()
     setClaims(data)
   }
@@ -32,17 +32,26 @@ export default function AgentDashboard({ user }: { user: any }) {
         <button onClick={fetchPolicyholders} className="bg-blue-600 text-white px-4 py-2 rounded mb-2">
           Load Policyholders
         </button>
-        <div className="bg-blue-50 p-4 rounded">
-          {policyholders.length === 0 ? (
-            <div>[Policyholder list placeholder]</div>
-          ) : (
-            <ul>
-              {policyholders.map((p, i) => (
-                <li key={i}>{p.name}</li>
+        {policyholders.length > 0 && (
+          <table className="min-w-full bg-white border mt-4">
+            <thead>
+              <tr>
+                {Object.keys(policyholders[0]).map((key) => (
+                  <th key={key} className="border px-2 py-1 text-left text-xs text-gray-700">{key}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {policyholders.map((ph, idx) => (
+                <tr key={idx}>
+                  {Object.values(ph).map((val, i) => (
+                    <td key={i} className="border px-2 py-1 text-xs">{String(val)}</td>
+                  ))}
+                </tr>
               ))}
-            </ul>
-          )}
-        </div>
+            </tbody>
+          </table>
+        )}
       </div>
 
       <div className="mb-8">
@@ -50,17 +59,26 @@ export default function AgentDashboard({ user }: { user: any }) {
         <button onClick={fetchPolicies} className="bg-blue-600 text-white px-4 py-2 rounded mb-2">
           Load Policies
         </button>
-        <div className="bg-blue-50 p-4 rounded">
-          {policies.length === 0 ? (
-            <div>[Policies sold placeholder]</div>
-          ) : (
-            <ul>
-              {policies.map((p, i) => (
-                <li key={i}>{p.policyName}</li>
+        {policies.length > 0 && (
+          <table className="min-w-full bg-white border mt-4">
+            <thead>
+              <tr>
+                {Object.keys(policies[0]).map((key) => (
+                  <th key={key} className="border px-2 py-1 text-left text-xs text-gray-700">{key}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {policies.map((policy, idx) => (
+                <tr key={idx}>
+                  {Object.values(policy).map((val, i) => (
+                    <td key={i} className="border px-2 py-1 text-xs">{String(val)}</td>
+                  ))}
+                </tr>
               ))}
-            </ul>
-          )}
-        </div>
+            </tbody>
+          </table>
+        )}
       </div>
 
       <div className="mb-8">
@@ -68,17 +86,26 @@ export default function AgentDashboard({ user }: { user: any }) {
         <button onClick={fetchClaims} className="bg-blue-600 text-white px-4 py-2 rounded mb-2">
           Load Claims
         </button>
-        <div className="bg-blue-50 p-4 rounded">
-          {claims.length === 0 ? (
-            <div>[Claim documents placeholder]</div>
-          ) : (
-            <ul>
-              {claims.map((c, i) => (
-                <li key={i}>{c.documentTitle}</li>
+        {claims.length > 0 && (
+          <table className="min-w-full bg-white border mt-4">
+            <thead>
+              <tr>
+                {Object.keys(claims[0]).map((key) => (
+                  <th key={key} className="border px-2 py-1 text-left text-xs text-gray-700">{key}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {claims.map((claim, idx) => (
+                <tr key={idx}>
+                  {Object.values(claim).map((val, i) => (
+                    <td key={i} className="border px-2 py-1 text-xs">{String(val)}</td>
+                  ))}
+                </tr>
               ))}
-            </ul>
-          )}
-        </div>
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   )
