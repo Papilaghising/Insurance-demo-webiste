@@ -11,6 +11,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
   const [documents, setDocuments] = useState<any[]>([])
   const [about, setAbout] = useState<any[]>([])
   const [help, setHelp] = useState<any[]>([])
+  const [status, setStatus] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState("policies")
   const { signOut } = useAuth()
   const router = useRouter()
@@ -31,7 +32,8 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
       payments: "/api/policyholder/mypayments",
       documents: "/api/policyholder/mydocuments",
       about: "/api/policyholder/profile/display",
-      help: "/api/support"
+      help: "/api/support",
+      status: "/api/policyholder/claimstatus"
     }
 
     if (!(type in endpoints)) {
@@ -65,6 +67,9 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
         break
       case "help":
         setHelp(data)
+        break
+      case "status":
+        setStatus(data)
         break
     }
   }
@@ -111,6 +116,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
           <button className="block w-full text-left" onClick={() => setActiveTab("documents")}>My Documents</button>
           <button className="block w-full text-left" onClick={() => setActiveTab("about")}>About Me</button>
           <button className="block w-full text-left" onClick={() => setActiveTab("help")}>Help & Support</button>
+          <button className="block w-full text-left" onClick={() => setActiveTab("status")}>Claim Status</button>
         </nav>
         <div className="mt-auto pt-6 border-t border-blue-700">
           <div className="flex items-center gap-2 mb-4">
@@ -167,6 +173,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
           {activeTab === "documents" && renderTable(documents)}
           {activeTab === "about" && renderTable(about)}
           {activeTab === "help" && renderTable(help)}
+          {activeTab === "status" && renderTable(status)}
         </div>
       </main>
     </div>
