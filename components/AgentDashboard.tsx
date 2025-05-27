@@ -1,17 +1,30 @@
 import React, { useState } from "react"
-import { UserCircle } from "lucide-react"
+import { UserCircle, LogOut } from "lucide-react"
+import { useAuth } from "@/contexts/auth-context"
+import { useRouter } from "next/navigation"
 
 export default function AgentDashboard({ user }: { user: any }) {
   const [policyholders, setPolicyholders] = useState<any[]>([])
   const [policies, setPolicies] = useState<any[]>([])
   const [claims, setClaims] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState("policyholders")
+  const { signOut } = useAuth()
+  const router = useRouter()
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+      router.push("/")
+    } catch (err) {
+      console.error("Failed to sign out:", err)
+    }
+  }
 
   const fetchData = async (type: string) => {
     const endpoints: Record<string, string> = {
-      policyholders: "/api/policyholders",
-      policies: "/api/soldpolicies",
-      claims: "/api/claimsdoc"
+      policyholders: "/api/agent/policyholders",
+      policies: "/api/agent/soldpolicies",
+      claims: "/api/agent/claimsdoc"
     }
   
     if (!(type in endpoints)) {
@@ -72,10 +85,17 @@ export default function AgentDashboard({ user }: { user: any }) {
           <button className="block w-full text-left" onClick={() => setActiveTab("claims")}>Claims</button>
         </nav>
         <div className="mt-auto pt-6 border-t border-blue-700">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mb-4">
             <UserCircle className="w-6 h-6" />
             <span>{user?.name ?? "Agent"}</span>
           </div>
+          <button 
+            onClick={handleSignOut}
+            className="flex items-center gap-2 text-red-300 hover:text-red-100 transition-colors w-full"
+          >
+            <LogOut className="w-5 h-5" />
+            <span>Sign Out</span>
+          </button>
         </div>
       </aside>
 

@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { createContext, useContext, useEffect, useState } from "react"
 import { getSupabase } from "@/lib/supabase"
 import type { Session, User } from "@supabase/supabase-js"
@@ -15,22 +14,10 @@ type AuthContextType = {
   user: User | null
   session: Session | null
   isLoading: boolean
-  signUp: (
-    email: string,
-    password: string,
-    options?: SignUpOptions
-  ) => Promise<{
-    error: any | null
-    data: any | null
-  }>
-  signIn: (
-    email: string,
-    password: string,
-  ) => Promise<{
-    error: any | null
-    data: any | null
-  }>
+  signUp: (email: string, password: string, options?: SignUpOptions) => Promise<{ error: any | null; data: any | null }>
+  signIn: (email: string, password: string) => Promise<{ error: any | null; data: any | null }>
   signOut: () => Promise<void>
+  role?: string | null
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -39,88 +26,129 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [supabaseInitialized, setSupabaseInitialized] = useState(false)
+  const [role, setRole] = useState<string | null>(null)
 
   useEffect(() => {
-    // Check if Supabase is available
     try {
       const supabase = getSupabase()
-      setSupabaseInitialized(true)
 
-      // Get session from Supabase
-      const getSession = async () => {
-        try {
-          const {
-            data: { session },
-            error,
-          } = await supabase.auth.getSession()
-
-          if (error) {
-            console.error("Error getting session:", error)
-          } else {
-            setSession(session)
-            setUser(session?.user ?? null)
-          }
-        } catch (err) {
-          console.error("Unexpected error getting session:", err)
-        } finally {
+      // Initial session check
+      supabase.auth.getSession().then(({ data: { session }, error }) => {
+        if (error) {
+          console.error("Error getting session:", error)
           setIsLoading(false)
+          return
         }
-      }
 
-      getSession()
+        if (session) {
+          setSession(session)
+          setUser(session.user)
+          setRole(session.user.user_metadata?.role || session.user.user_metadata?.userType)
+        }
+        
+        setIsLoading(false)
+      })
 
       // Listen for auth changes
-      const {
-        data: { subscription },
-      } = supabase.auth.onAuthStateChange((_event, session) => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
         setSession(session)
         setUser(session?.user ?? null)
+        setRole(session?.user?.user_metadata?.role || session?.user?.user_metadata?.userType)
         setIsLoading(false)
+
+        // If we have a session, sync it with the server
+        if (session) {
+          await fetch('/api/auth/session', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ session }),
+          })
+        }
       })
 
       return () => {
         subscription.unsubscribe()
       }
     } catch (error) {
-      console.error("Supabase initialization error:", error)
+      console.error("Auth initialization error:", error)
       setIsLoading(false)
     }
   }, [])
 
-  // signUp now supports userType (agent or policyholder) via options
-  const signUp = async (
-    email: string,
-    password: string,
-    options?: SignUpOptions
-  ) => {
+  const signUp = async (email: string, password: string, options?: SignUpOptions) => {
     try {
-      const supabase = getSupabase();
-      // Always set 'role' in user_metadata
-      const role = options?.role || options?.userType;
-      return await supabase.auth.signUp({
+      const supabase = getSupabase()
+      const role = options?.role || options?.userType
+      
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
+            role,
             ...options,
-            role, // ensure 'role' is set
-          }
+          },
+        },
+      })
+
+      // If signup was successful and user is a policyholder, create profile
+      if (!error && data?.user && (role === 'policyholder')) {
+        const { error: profileError } = await supabase
+          .from('cprofile')
+          .upsert({
+            fullName: data.user.user_metadata?.full_name || data.user.user_metadata?.name || '',
+            email: data.user.email
+          })
+
+        if (profileError) {
+          console.error('Error creating profile:', profileError)
         }
-      });
+      }
+
+      return { error, data }
     } catch (error) {
-      console.error("Sign up error:", error);
-      return { error, data: null };
+      console.error("Sign up error:", error)
+      return { error, data: null }
     }
   }
 
   const signIn = async (email: string, password: string) => {
     try {
       const supabase = getSupabase()
-      return await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
+
+      if (!error && data?.session) {
+        // Sync session with the server
+        await fetch('/api/auth/session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ session: data.session }),
+        })
+
+        // If user is a policyholder, update their profile in cprofile table
+        if (data.session.user.user_metadata?.role === 'policyholder' || 
+            data.session.user.user_metadata?.userType === 'policyholder') {
+          const { error: profileError } = await supabase
+            .from('cprofile')
+            .upsert({
+              fullName: data.session.user.user_metadata?.full_name || data.session.user.user_metadata?.name || '',
+              email: data.session.user.email
+            })
+
+          if (profileError) {
+            console.error('Error updating profile:', profileError)
+          }
+        }
+      }
+
+      return { data, error }
     } catch (error) {
       console.error("Sign in error:", error)
       return { error, data: null }
@@ -131,24 +159,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const supabase = getSupabase()
       await supabase.auth.signOut()
+      
+      // Clear session on the server
+      await fetch('/api/auth/session', {
+        method: 'DELETE',
+      })
     } catch (error) {
       console.error("Sign out error:", error)
     }
-  }
-
-  // Extract role from user metadata for easy access
-  const role = user?.user_metadata?.role || user?.user_metadata?.userType || null;
-
-  // If Supabase is not initialized, render a fallback UI
-  if (!supabaseInitialized && isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-blue-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-blue-600">Loading...</p>
-        </div>
-      </div>
-    )
   }
 
   const value = {
@@ -158,7 +176,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signIn,
     signOut,
-    role, // Add role to context
+    role,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
