@@ -13,6 +13,8 @@ export default function SubmitClaimPage() {
     incidentLocation: '',
     incidentDescription: '',
     supportingDocs: null as File | null,
+    identityDocs: null as File | null,
+    invoices: null as File | null, 
     claimAmount: '',
     consent: false,
   })
@@ -20,13 +22,15 @@ export default function SubmitClaimPage() {
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
-
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type, checked, files } = e.target as HTMLInputElement
+  
     if (type === 'checkbox') {
       setForm(f => ({ ...f, [name]: checked }))
     } else if (type === 'file' && files && files.length > 0) {
-      setForm(f => ({ ...f, [name]: files[0] }))
+      const normalizedName = name.charAt(0).toLowerCase() + name.slice(1)
+      setForm(f => ({ ...f, [normalizedName]: files[0] }))
     } else {
       setForm(f => ({ ...f, [name]: value }))
     }
@@ -38,24 +42,41 @@ export default function SubmitClaimPage() {
     setError('')
     setSuccess(false)
     try {
-      const formData = new FormData()
-      formData.append('fullName', form.fullName)
-      formData.append('email', form.email)
-      formData.append('phone', form.phone)
-      formData.append('policyNumber', form.policyNumber)
-      formData.append('claimType', form.claimType)
-      formData.append('dateOfIncident', form.dateOfIncident)
-      formData.append('incidentLocation', form.incidentLocation)
-      formData.append('incidentDescription', form.incidentDescription)
-      if (form.supportingDocs) formData.append('supportingDocs', form.supportingDocs)
-      formData.append('claimAmount', form.claimAmount)
-      formData.append('consent', form.consent ? 'true' : 'false')
-      // TODO: Replace with your API endpoint
-      const res = await fetch('/api/claimsdoc', {
-        method: 'POST',
-        body: formData,
+      // Convert form data into URL encoded format
+      const formBody = Object.entries({
+        fullName: form.fullName,
+        email: form.email,
+        phone: form.phone,
+        policyNumber: form.policyNumber,
+        claimType: form.claimType,
+        dateOfIncident: form.dateOfIncident,
+        incidentLocation: form.incidentLocation,
+        incidentDescription: form.incidentDescription,
+        claimAmount: form.claimAmount,
+        consent: form.consent
       })
-      if (!res.ok) throw new Error('Failed to submit form')
+      .map(([key, value]) => {
+        if (typeof value === 'boolean') {
+          return encodeURIComponent(key) + '=' + encodeURIComponent(value ? 'true' : 'false')
+        }
+        return encodeURIComponent(key) + '=' + encodeURIComponent(value?.toString() || '')
+      })
+      .join('&')
+
+      const res = await fetch('/api/agent/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formBody,
+      })
+
+      if (!res.ok) {
+        const jsonResponse = await res.json()
+        throw new Error(jsonResponse.error || 'Failed to submit form')
+      }
+      
+      const jsonResponse = await res.json()
       setSuccess(true)
       setForm({
         fullName: '',
@@ -66,6 +87,8 @@ export default function SubmitClaimPage() {
         dateOfIncident: '',
         incidentLocation: '',
         incidentDescription: '',
+        identityDocs: null,
+        invoices: null, 
         supportingDocs: null,
         claimAmount: '',
         consent: false,
@@ -88,7 +111,7 @@ export default function SubmitClaimPage() {
             <label className="block text-sm font-medium mb-1">Full Name</label>
             <input
               type="text"
-              name="FullName"
+              name="fullName"
               value={form.fullName}
               onChange={handleChange}
               required
@@ -112,7 +135,7 @@ export default function SubmitClaimPage() {
             <label className="block text-sm font-medium mb-1">Phone Number</label>
             <input
               type="text"
-              name="Phone"
+              name="phone"
               value={form.phone}
               onChange={handleChange}
               required

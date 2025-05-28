@@ -136,6 +136,19 @@ export default function SignupPage() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="email">fullName</Label>
+              <Input
+                id="fullname"
+                type="fullname"
+                placeholder="first"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="border-blue-200 focus:border-blue-400 focus:ring-blue-400"
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"

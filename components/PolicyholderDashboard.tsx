@@ -1,6 +1,8 @@
 import React, { useState } from "react"
-import { UserCircle } from "lucide-react"
+import { UserCircle, LogOut } from "lucide-react"
 import Link from "next/link"
+import { useAuth } from "@/contexts/auth-context"
+import { useRouter } from "next/navigation"
 
 export default function PolicyholderDashboard({ user }: { user: any }) {
   const [policies, setPolicies] = useState<any[]>([])
@@ -10,14 +12,25 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
   const [about, setAbout] = useState<any[]>([])
   const [help, setHelp] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState("policies")
+  const { signOut } = useAuth()
+  const router = useRouter()
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+      router.push("/")
+    } catch (err) {
+      console.error("Failed to sign out:", err)
+    }
+  }
 
   const fetchData = async (type: string) => {
     const endpoints: Record<string, string> = {
-      policies: "/api/mypolicies",
-      claims: "/api/myclaims",
-      payments: "/api/mypayments",
-      documents: "/api/mydocuments",
-      about: "/api/myprofile",
+      policies: "/api/policyholder/mypolicies",
+      claims: "/api/policyholder/myclaims",
+      payments: "/api/policyholder/mypayments",
+      documents: "/api/policyholder/mydocuments",
+      about: "/api/policyholder/profile/display",
       help: "/api/support"
     }
 
@@ -100,10 +113,17 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
           <button className="block w-full text-left" onClick={() => setActiveTab("help")}>Help & Support</button>
         </nav>
         <div className="mt-auto pt-6 border-t border-blue-700">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mb-4">
             <UserCircle className="w-6 h-6" />
             <span>{user?.name ?? "Policyholder"}</span>
           </div>
+          <button 
+            onClick={handleSignOut}
+            className="flex items-center gap-2 text-red-300 hover:text-red-100 transition-colors w-full"
+          >
+            <LogOut className="w-5 h-5" />
+            <span>Sign Out</span>
+          </button>
         </div>
       </aside>
 
@@ -127,6 +147,13 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                 <Link href="/dashboard/claims/submit">
                   <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
                     Submit a New Claim
+                  </button>
+                </Link>
+              )}
+              {activeTab === "about" && (
+                <Link href="/dashboard/profile/edit">
+                  <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Edit Profile
                   </button>
                 </Link>
               )}
