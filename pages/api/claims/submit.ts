@@ -8,11 +8,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const supabase = getSupabase()
-
-    // Parse the request body directly since it's already parsed by Next.js
     const body = req.body
 
-    const { data, error } = await supabase.from('claims').insert([
+    // Insert the claim first
+    const { data: claimData, error: claimError } = await supabase.from('claims').insert([
       {
         full_name: body.fullName,
         email: body.email,
@@ -25,14 +24,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         claim_amount: parseFloat(body.claimAmount),
         consent: body.consent === 'true'
       },
-    ])
+    ]).select()
 
-    if (error) {
-      console.error('Supabase insert error:', error)
-      return res.status(400).json({ error: error.message })
+    if (claimError) {
+      console.error('Supabase insert error:', claimError)
+      return res.status(400).json({ error: claimError.message })
     }
 
-    return res.status(200).json({ message: 'Success', data })
+    // Return the claim data including the ID for file upload
+    return res.status(200).json({ 
+      message: 'Success', 
+      data: claimData[0],
+    })
   } catch (err: any) {
     console.error('API Error:', err)
     return res.status(500).json({ error: err.message })
