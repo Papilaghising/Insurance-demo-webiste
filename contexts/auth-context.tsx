@@ -93,18 +93,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       })
 
+      console.log('Signup response:', { data, error, role })
+
       // If signup was successful and user is a policyholder, create profile
-      if (!error && data?.user && (role === 'policyholder')) {
+      if (!error && data?.user ) {
+        console.log('Attempting to create profile for user:', data.user.id)
         const { error: profileError } = await supabase
           .from('cprofile')
           .upsert({
-            fullName: data.user.user_metadata?.full_name || data.user.user_metadata?.name || '',
+            user_id: data.user.id,
+            full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || '',
             email: data.user.email
           })
 
         if (profileError) {
           console.error('Error creating profile:', profileError)
+        } else {
+          console.log('Profile created successfully')
         }
+      } else {
+        console.log('Skipping profile creation:', { 
+          hasError: !!error, 
+          hasUser: !!data?.user, 
+          isPolicyholder: role === 'policyholder'
+        })
       }
 
       return { error, data }
@@ -138,7 +150,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const { error: profileError } = await supabase
             .from('cprofile')
             .upsert({
-              fullName: data.session.user.user_metadata?.full_name || data.session.user.user_metadata?.name || '',
+              user_id: data.session.user.id,
+              full_name: data.session.user.user_metadata?.full_name || data.session.user.user_metadata?.name || '',
               email: data.session.user.email
             })
 
