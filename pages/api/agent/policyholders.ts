@@ -3,7 +3,7 @@ import { getSupabase } from '../../../lib/supabase'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const supabase = getSupabase()
-  const { data, error } = await supabase.from('policyholders').select('*')
+  const { data, error } = await supabase.from('cprofile').select('*')
 
   if (error) {
     return res.status(500).json({ error: error.message })

@@ -56,13 +56,13 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
 
       const res = await fetch(endpoints[type], {
         method: 'GET',
-        credentials: 'same-origin',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
           'Authorization': `Bearer ${session.access_token}`
-        }
+        },
+        credentials: 'include'
       })
+      
       console.log('Frontend: Response status:', res.status)
       
       if (!res.ok) {
@@ -133,6 +133,54 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
     )
   }
 
+  const renderClaimsTable = (claims: any[]) => {
+    if (!claims.length) return <p className="text-gray-500">No claims found. Click "Submit a New Claim" to file a claim.</p>
+    return (
+      <div className="overflow-auto border rounded-lg shadow">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-left">Claim ID</th>
+              <th className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-left">Type</th>
+              <th className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-left">Date</th>
+              <th className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-left">Amount</th>
+              <th className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-left">Status</th>
+              <th className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-left">Description</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-100">
+            {claims.map((claim, idx) => (
+              <tr key={idx} className="hover:bg-gray-50">
+                <td className="px-4 py-2 text-sm text-gray-700 font-mono">{claim.id}</td>
+                <td className="px-4 py-2 text-sm text-gray-700">{claim.claim_type}</td>
+                <td className="px-4 py-2 text-sm text-gray-700">
+                  {new Date(claim.date_of_incident).toLocaleDateString()}
+                </td>
+                <td className="px-4 py-2 text-sm text-gray-700">
+                  ${parseFloat(claim.claim_amount).toLocaleString()}
+                </td>
+                <td className="px-4 py-2 text-sm">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    claim.public_status === 'SUBMITTED' ? 'bg-blue-100 text-blue-800' :
+                    claim.public_status === 'IN_REVIEW' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-green-100 text-green-800'
+                  }`}>
+                    {claim.public_status?.replace('_', ' ')}
+                  </span>
+                </td>
+                <td className="px-4 py-2 text-sm text-gray-700">
+                  <p className="truncate max-w-xs" title={claim.incident_description}>
+                    {claim.incident_description}
+                  </p>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
@@ -175,7 +223,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                 onClick={() => fetchData(activeTab)}
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
               >
-                Load {activeTab}
+                Refresh {activeTab}
               </button>
               {activeTab === "claims" && (
                 <Link href="/dashboard/claims/submit">
@@ -196,7 +244,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
 
           {/* Render based on active tab */}
           {activeTab === "policies" && renderTable(policies)}
-          {activeTab === "claims" && renderTable(claims)}
+          {activeTab === "claims" && renderClaimsTable(claims)}
           {activeTab === "payments" && renderTable(payments)}
           {activeTab === "documents" && renderTable(documents)}
           {activeTab === "about" && renderTable(about)}
