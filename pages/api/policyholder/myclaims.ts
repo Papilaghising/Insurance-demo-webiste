@@ -29,9 +29,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Get the user from the session
     const { data: { user }, error: userError } = await supabase.auth.getUser(token)
     
-    if (userError || !user) {
-      console.error('User error:', userError)
-      return res.status(401).json({ error: 'Invalid token' })
+    if (userError || !user || !user.email) {
+      console.error('User error or no email:', userError)
+      return res.status(401).json({ error: 'Invalid token or missing email' })
     }
 
     console.log('Fetching claims for user:', user.email)
