@@ -67,7 +67,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         risk_level: fraudAnalysis.riskLevel,
         key_findings: fraudAnalysis.keyFindings,
         status: fraudAnalysis.recommendation === 'APPROVE' ? 'APPROVED' : 
-                fraudAnalysis.recommendation === 'REJECT' ? 'REJECTED' : 'UNDER_REVIEW'
+                fraudAnalysis.recommendation === 'REJECT' ? 'REJECTED' : 'UNDER_REVIEW',
+        public_status: 'SUBMITTED'
       };
 
       console.log('Inserting claim data:', claimData);
@@ -107,7 +108,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         fraud_risk_score: 50, // Default score
         risk_level: 'MEDIUM',
         key_findings: ['Fraud analysis failed - manual review required'],
-        status: 'UNDER_REVIEW'
+        status: 'UNDER_REVIEW',
+        public_status: 'SUBMITTED'
       };
 
       const { data: insertedClaim, error: claimError } = await supabase

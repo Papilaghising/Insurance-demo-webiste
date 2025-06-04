@@ -46,14 +46,8 @@ export default function SubmitClaimPage() {
   
   useEffect(() => {
     if (success) {
-      // Auto-dismiss success message after 5 seconds
-      const timer = setTimeout(() => {
-        setSuccess(false)
-        // Redirect to dashboard
-        router.push('/dashboard')
-      }, 5000)
-
-      return () => clearTimeout(timer)
+      // Remove the auto-dismiss timer
+      return () => {}
     }
   }, [success, router])
 
@@ -177,22 +171,6 @@ export default function SubmitClaimPage() {
           throw new Error(uploadError.message || 'Failed to upload files')
         }
       }
-
-      setForm({
-        fullName: '',
-        email: '',
-        phone: '',
-        policyNumber: '',
-        claimType: '',
-        dateOfIncident: '',
-        incidentLocation: '',
-        incidentDescription: '',
-        identityDocs: null,
-        invoices: null, 
-        supportingDocs: null,
-        claimAmount: '',
-        consent: false,
-      })
     } catch (err: any) {
       console.error('Form submission error:', err)
       setError(err.message || 'Error submitting form')
@@ -206,7 +184,12 @@ export default function SubmitClaimPage() {
       {success ? (
         <div className="max-w-2xl mx-auto bg-white border border-gray-200 p-8 rounded-lg shadow-sm">
           <div className="mb-6">
-            <h2 className="text-2xl font-semibold mb-1">Claim Status</h2>
+            <h2 className="text-2xl font-semibold mb-1">Claim Submitted Successfully</h2>
+            <div className="bg-green-50 border border-green-200 rounded p-4 mb-4">
+              <p className="text-green-800">
+                Your claim has been submitted successfully and is now being processed. You can track its status from your dashboard.
+              </p>
+            </div>
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-gray-600">
@@ -217,11 +200,19 @@ export default function SubmitClaimPage() {
                 </p>
               </div>
               <span className={`text-sm font-medium px-3 py-1 rounded ${
-                responseData?.data?.status === 'APPROVED' ? 'bg-green-50 text-green-800' :
-                responseData?.data?.status === 'REJECTED' ? 'bg-red-50 text-red-800' :
-                'bg-yellow-50 text-yellow-800'
+                user?.role === 'agent' ? (
+                  responseData?.data?.status === 'APPROVED' ? 'bg-green-50 text-green-800' :
+                  responseData?.data?.status === 'REJECTED' ? 'bg-red-50 text-red-800' :
+                  'bg-yellow-50 text-yellow-800'
+                ) : (
+                  responseData?.data?.public_status === 'SUBMITTED' ? 'bg-blue-50 text-blue-800' :
+                  responseData?.data?.public_status === 'IN_REVIEW' ? 'bg-yellow-50 text-yellow-800' :
+                  'bg-green-50 text-green-800'
+                )
               }`}>
-                {responseData?.data?.status?.replace('_', ' ')}
+                {user?.role === 'agent' ? 
+                  responseData?.data?.status?.replace('_', ' ') :
+                  responseData?.data?.public_status?.replace('_', ' ')}
               </span>
             </div>
           </div>
@@ -230,28 +221,28 @@ export default function SubmitClaimPage() {
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <p className="text-gray-600 mb-1">Claim ID</p>
-                <p className="font-mono text-sm break-all">{responseData?.data?.id || 'Processing...'}</p>
+                <p className="font-mono text-sm break-all">{responseData?.data?.id || 'N/A'}</p>
               </div>
               <div>
                 <p className="text-gray-600 mb-1">Claim Amount</p>
-                <p className="text-lg font-semibold">${parseFloat(form.claimAmount).toLocaleString()}</p>
+                <p className="text-lg font-semibold">${form.claimAmount ? parseFloat(form.claimAmount).toLocaleString() : '0'}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <p className="text-gray-600 mb-1">Claimant Name</p>
-                <p>{form.fullName}</p>
+                <p>{form.fullName || 'N/A'}</p>
               </div>
               <div>
                 <p className="text-gray-600 mb-1">Email</p>
-                <p className="break-all">{form.email}</p>
+                <p className="break-all">{form.email || 'N/A'}</p>
               </div>
             </div>
 
             <div>
               <p className="text-gray-600 mb-1">Date of Incident</p>
-              <p>{form.dateOfIncident}</p>
+              <p>{form.dateOfIncident || 'N/A'}</p>
             </div>
 
             {/* Fraud Analysis Section - Only visible to agents */}
