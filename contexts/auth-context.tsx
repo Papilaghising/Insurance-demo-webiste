@@ -103,7 +103,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .upsert({
             user_id: data.user.id,
             full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || '',
-            email: data.user.email
+            email: data.user.email,
+            role: role || 'policyholder'
           })
 
         if (profileError) {
@@ -152,7 +153,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .upsert({
               user_id: data.session.user.id,
               full_name: data.session.user.user_metadata?.full_name || data.session.user.user_metadata?.name || '',
-              email: data.session.user.email
+              email: data.session.user.email,
+              role: data.session.user.user_metadata?.role || data.session.user.user_metadata?.userType || 'policyholder'
             })
 
           if (profileError) {

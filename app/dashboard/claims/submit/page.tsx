@@ -1,6 +1,8 @@
 "use client"
 import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/auth-context"
+import { getSupabase } from "@/lib/supabase"
 
 export default function SubmitClaimPage() {
   const [form, setForm] = useState({
@@ -19,10 +21,12 @@ export default function SubmitClaimPage() {
     consent: false,
   })
   const [submitting, setSubmitting] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({})
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
   const [responseData, setResponseData] = useState<any>(null)
   const router = useRouter()
+  const { user } = useAuth()
   
   useEffect(() => {
     if (success) {
@@ -36,6 +40,13 @@ export default function SubmitClaimPage() {
       return () => clearTimeout(timer)
     }
   }, [success, router])
+
+  useEffect(() => {
+    // Redirect to login if not authenticated
+    if (!user) {
+      router.push('/login')
+    }
+  }, [user, router])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type, checked, files } = e.target as HTMLInputElement
@@ -54,20 +65,39 @@ export default function SubmitClaimPage() {
     const formData = new FormData()
     formData.append('claimId', claimId)
 
+    let hasFiles = false
     if (form.identityDocs) {
       formData.append('identityDocs', form.identityDocs)
+      hasFiles = true
     }
     if (form.supportingDocs) {
       formData.append('supportingDocs', form.supportingDocs)
+      hasFiles = true
     }
     if (form.invoices) {
       formData.append('invoices', form.invoices)
+      hasFiles = true
+    }
+
+    if (!hasFiles) {
+      return null
     }
 
     try {
+      const supabase = getSupabase()
+      const { data: { session } } = await supabase.auth.getSession()
+
+      if (!session) {
+        throw new Error('No valid session found')
+      }
+
       const uploadRes = await fetch('/api/claims/upload', {
         method: 'POST',
         body: formData,
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        credentials: 'same-origin'
       })
 
       const responseData = await uploadRes.json()

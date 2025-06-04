@@ -3,6 +3,7 @@ import { UserCircle, LogOut } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
+import { getSupabase } from "@/lib/supabase"
 
 export default function PolicyholderDashboard({ user }: { user: any }) {
   const [policies, setPolicies] = useState<any[]>([])
@@ -25,47 +26,80 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
   }
 
   const fetchData = async (type: string) => {
-    const endpoints: Record<string, string> = {
-      policies: "/api/policyholder/mypolicies",
-      claims: "/api/policyholder/myclaims",
-      payments: "/api/policyholder/mypayments",
-      documents: "/api/policyholder/mydocuments",
-      about: "/api/policyholder/profile/display",
-      help: "/api/support"
-    }
+    try {
+      console.log('Frontend: Fetching data for type:', type)
+      const endpoints: Record<string, string> = {
+        policies: "/api/policyholder/mypolicies",
+        claims: "/api/policyholder/myclaims",
+        payments: "/api/policyholder/mypayments",
+        documents: "/api/policyholder/mydocuments",
+        about: "/api/policyholder/profile/display",
+        help: "/api/support"
+      }
 
-    if (!(type in endpoints)) {
-      console.error("Invalid data type requested:", type)
-      return
-    }
+      console.log('Frontend: Using endpoint:', endpoints[type])
 
-    const res = await fetch(endpoints[type])
-    if (!res.ok) {
-      console.error("Failed to fetch:", res.status, res.statusText)
-      return
-    }
+      if (!(type in endpoints)) {
+        console.error("Invalid data type requested:", type)
+        return
+      }
 
-    const data = await res.json()
+      // Get current session
+      const supabase = getSupabase()
+      const { data: { session } } = await supabase.auth.getSession()
 
-    switch (type) {
-      case "policies":
-        setPolicies(data)
-        break
-      case "claims":
-        setClaims(data)
-        break
-      case "payments":
-        setPayments(data)
-        break
-      case "documents":
-        setDocuments(data)
-        break
-      case "about":
-        setAbout(data)
-        break
-      case "help":
-        setHelp(data)
-        break
+      if (!session) {
+        console.error("No active session found")
+        router.push('/login')
+        return
+      }
+
+      const res = await fetch(endpoints[type], {
+        method: 'GET',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      })
+      console.log('Frontend: Response status:', res.status)
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}))
+        console.error("Failed to fetch:", {
+          status: res.status,
+          statusText: res.statusText,
+          errorData
+        })
+        return
+      }
+
+      const data = await res.json()
+      console.log('Frontend: Received data:', data)
+
+      switch (type) {
+        case "policies":
+          setPolicies(data)
+          break
+        case "claims":
+          setClaims(data)
+          break
+        case "payments":
+          setPayments(data)
+          break
+        case "documents":
+          setDocuments(data)
+          break
+        case "about":
+          setAbout(data)
+          break
+        case "help":
+          setHelp(data)
+          break
+      }
+    } catch (error) {
+      console.error('Frontend: Error fetching data:', error)
     }
   }
 

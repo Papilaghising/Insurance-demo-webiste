@@ -58,9 +58,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    if (!buckets?.some(b => b.name === 'claims')) {
+    if (!buckets?.some(b => b.name === 'trueclaim')) {
       console.log('Creating claims bucket...')
-      const { error: createError } = await supabase.storage.createBucket('claims', {
+      const { error: createError } = await supabase.storage.createBucket('trueclaim', {
         public: true,
         fileSizeLimit: 52428800 // 50MB
       })
@@ -76,13 +76,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Create folders in the bucket if they don't exist
     for (const folder of Object.values(STORAGE_FOLDERS)) {
       const { error: folderError } = await supabase.storage
-        .from('claims')
+        .from('trueclaim')
         .list(folder)
         .catch(() => ({ error: true }))
 
       if (folderError) {
         const { error: createFolderError } = await supabase.storage
-          .from('claims')
+          .from('trueclaim')
           .upload(`${folder}/.keep`, new Uint8Array())
 
         if (createFolderError) {
@@ -118,7 +118,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         
         console.log(`Uploading file to ${filePath}`)
         const { data, error: uploadError } = await supabase.storage
-          .from('claims')
+          .from('trueclaim')
           .upload(filePath, fileBuffer, {
             contentType: file.mimetype || 'application/octet-stream',
             cacheControl: '3600',
@@ -132,7 +132,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         console.log(`Successfully uploaded ${safeFileName}`)
         const { data: { publicUrl } } = supabase.storage
-          .from('claims')
+          .from('trueclaim')
           .getPublicUrl(data.path)
 
         return {
