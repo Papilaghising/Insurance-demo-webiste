@@ -4,8 +4,24 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { getSupabase } from "@/lib/supabase"
 
+interface FormState {
+  fullName: string;
+  email: string;
+  phone: string;
+  policyNumber: string;
+  claimType: string;
+  dateOfIncident: string;
+  incidentLocation: string;
+  incidentDescription: string;
+  supportingDocs: File | null;
+  identityDocs: File | null;
+  invoices: File | null;
+  claimAmount: string;
+  consent: boolean;
+}
+
 export default function SubmitClaimPage() {
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormState>({
     fullName: '',
     email: '',
     phone: '',
@@ -14,9 +30,9 @@ export default function SubmitClaimPage() {
     dateOfIncident: '',
     incidentLocation: '',
     incidentDescription: '',
-    supportingDocs: null as File | null,
-    identityDocs: null as File | null,
-    invoices: null as File | null, 
+    supportingDocs: null,
+    identityDocs: null,
+    invoices: null,
     claimAmount: '',
     consent: false,
   })
@@ -52,12 +68,12 @@ export default function SubmitClaimPage() {
     const { name, value, type, checked, files } = e.target as HTMLInputElement
   
     if (type === 'checkbox') {
-      setForm(f => ({ ...f, [name]: checked }))
+      setForm((f: FormState) => ({ ...f, [name]: checked }))
     } else if (type === 'file' && files && files.length > 0) {
       const normalizedName = name.charAt(0).toLowerCase() + name.slice(1)
-      setForm(f => ({ ...f, [normalizedName]: files[0] }))
+      setForm((f: FormState) => ({ ...f, [normalizedName]: files[0] }))
     } else {
-      setForm(f => ({ ...f, [name]: value }))
+      setForm((f: FormState) => ({ ...f, [name]: value }))
     }
   }
 
@@ -200,8 +216,12 @@ export default function SubmitClaimPage() {
                   Submitted on {new Date().toLocaleDateString()}
                 </p>
               </div>
-              <span className="bg-yellow-50 text-yellow-800 text-sm font-medium px-3 py-1 rounded">
-                UNDER REVIEW
+              <span className={`text-sm font-medium px-3 py-1 rounded ${
+                responseData?.data?.status === 'APPROVED' ? 'bg-green-50 text-green-800' :
+                responseData?.data?.status === 'REJECTED' ? 'bg-red-50 text-red-800' :
+                'bg-yellow-50 text-yellow-800'
+              }`}>
+                {responseData?.data?.status?.replace('_', ' ')}
               </span>
             </div>
           </div>
@@ -233,6 +253,68 @@ export default function SubmitClaimPage() {
               <p className="text-gray-600 mb-1">Date of Incident</p>
               <p>{form.dateOfIncident}</p>
             </div>
+
+            {/* Fraud Analysis Section - Only visible to agents */}
+            {user?.role === 'agent' && responseData?.fraudAnalysis && (
+              <div className="mt-6 border-t pt-6">
+                <h3 className="text-lg font-semibold mb-4">Fraud Analysis Results</h3>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center">
+                    <div className="flex-1">
+                      <p className="text-gray-600 mb-1">Risk Score</p>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className={`h-2.5 rounded-full ${
+                            responseData.fraudAnalysis.fraudRiskScore <= 30 ? 'bg-green-500' :
+                            responseData.fraudAnalysis.fraudRiskScore <= 70 ? 'bg-yellow-500' :
+                            'bg-red-500'
+                          }`}
+                          style={{ width: `${responseData.fraudAnalysis.fraudRiskScore}%` }}
+                        ></div>
+                      </div>
+                      <p className="text-sm mt-1">{responseData.fraudAnalysis.fraudRiskScore}/100</p>
+                    </div>
+                    <div className="ml-4">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                        responseData.fraudAnalysis.riskLevel === 'LOW' ? 'bg-green-100 text-green-800' :
+                        responseData.fraudAnalysis.riskLevel === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {responseData.fraudAnalysis.riskLevel} RISK
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-gray-600 mb-2">Key Findings</p>
+                    <ul className="space-y-2">
+                      {responseData.fraudAnalysis.keyFindings.map((finding: string, index: number) => (
+                        <li key={index} className="flex items-start">
+                          <span className="flex-shrink-0 w-4 h-4 mt-1 mr-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="text-gray-400">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+                            </svg>
+                          </span>
+                          <span className="text-gray-700">{finding}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="text-gray-600 mb-2">System Recommendation</p>
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                      responseData.fraudAnalysis.recommendation === 'APPROVE' ? 'bg-green-100 text-green-800' :
+                      responseData.fraudAnalysis.recommendation === 'REJECT' ? 'bg-red-100 text-red-800' :
+                      'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {responseData.fraudAnalysis.recommendation}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Navigation Buttons */}
             <div className="mt-8 flex gap-4">
