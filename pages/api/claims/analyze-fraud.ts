@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { GoogleGenAI } from '@google/genai';
 
 // Initialize the Gemini API with the correct configuration
-const genAI = new GoogleGenAI({ apiKey: 'AIzaSyD1PmCO2SX8Nsf53zfUmpDusLcGf5N07Tg' });
+const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 interface FraudAnalysisResult {
   fraudRiskScore: number;
