@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { UserCircle, LogOut } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
@@ -6,13 +6,10 @@ import { useRouter } from "next/navigation"
 import { getSupabase } from "@/lib/supabase"
 
 export default function PolicyholderDashboard({ user }: { user: any }) {
-  const [policies, setPolicies] = useState<any[]>([])
-  const [claims, setClaims] = useState<any[]>([])
-  const [payments, setPayments] = useState<any[]>([])
-  const [documents, setDocuments] = useState<any[]>([])
-  const [about, setAbout] = useState<any[]>([])
-  const [help, setHelp] = useState<any[]>([])
+  const [dataMap, setDataMap] = useState<Record<string, any[]>>({})
   const [activeTab, setActiveTab] = useState("policies")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const { signOut } = useAuth()
   const router = useRouter()
 
@@ -27,29 +24,27 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
 
   const fetchData = async (type: string) => {
     try {
-      console.log('Frontend: Fetching data for type:', type)
+      setLoading(true)
+      setError(null)
+
       const endpoints: Record<string, string> = {
         policies: "/api/policyholder/mypolicies",
         claims: "/api/policyholder/myclaims",
         payments: "/api/policyholder/mypayments",
-        documents: "/api/policyholder/mydocuments",
+        status: "/api/policyholder/mystatus",
         about: "/api/policyholder/profile/display",
         help: "/api/support"
       }
 
-      console.log('Frontend: Using endpoint:', endpoints[type])
-
       if (!(type in endpoints)) {
-        console.error("Invalid data type requested:", type)
+        setError("Invalid data type requested.")
         return
       }
 
-      // Get current session
       const supabase = getSupabase()
       const { data: { session } } = await supabase.auth.getSession()
 
       if (!session) {
-        console.error("No active session found")
         router.push('/login')
         return
       }
@@ -62,46 +57,25 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
         },
         credentials: 'include'
       })
-      
-      console.log('Frontend: Response status:', res.status)
-      
+
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}))
-        console.error("Failed to fetch:", {
-          status: res.status,
-          statusText: res.statusText,
-          errorData
-        })
+        setError("Failed to fetch data.")
         return
       }
 
       const data = await res.json()
-      console.log('Frontend: Received data:', data)
-
-      switch (type) {
-        case "policies":
-          setPolicies(data)
-          break
-        case "claims":
-          setClaims(data)
-          break
-        case "payments":
-          setPayments(data)
-          break
-        case "documents":
-          setDocuments(data)
-          break
-        case "about":
-          setAbout(data)
-          break
-        case "help":
-          setHelp(data)
-          break
-      }
+      setDataMap((prev) => ({ ...prev, [type]: data }))
     } catch (error) {
-      console.error('Frontend: Error fetching data:', error)
+      setError("An unexpected error occurred.")
+    } finally {
+      setLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchData(activeTab)
+  }, [activeTab])
 
   const renderTable = (data: any[]) => {
     if (!data.length) return <p className="text-gray-500">No data found.</p>
@@ -120,7 +94,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
           <tbody className="bg-white divide-y divide-gray-100">
             {data.map((row, idx) => (
               <tr key={idx} className="hover:bg-gray-50">
-                {Object.values(row).map((val, i) => (
+                {Object.entries(row).map(([key, val], i) => (
                   <td key={i} className="px-4 py-2 text-sm text-gray-700">
                     {String(val)}
                   </td>
@@ -157,7 +131,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                   {new Date(claim.date_of_incident).toLocaleDateString()}
                 </td>
                 <td className="px-4 py-2 text-sm text-gray-700">
-                  ${parseFloat(claim.claim_amount).toLocaleString()}
+                  {new Intl.NumberFormat().format(claim.claim_amount)}
                 </td>
                 <td className="px-4 py-2 text-sm">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -181,18 +155,22 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
     )
   }
 
+  const dataToRender = dataMap[activeTab] || []
+
   return (
     <div className="flex h-screen">
-      {/* Sidebar */}
       <aside className="w-64 bg-blue-900 text-white flex flex-col px-4 py-6">
         <h1 className="text-2xl font-bold mb-6">My Dashboard</h1>
         <nav className="space-y-4">
-          <button className="block w-full text-left" onClick={() => setActiveTab("policies")}>My Policies</button>
-          <button className="block w-full text-left" onClick={() => setActiveTab("claims")}>My Claims</button>
-          <button className="block w-full text-left" onClick={() => setActiveTab("payments")}>My Premium Payments</button>
-          <button className="block w-full text-left" onClick={() => setActiveTab("documents")}>My Documents</button>
-          <button className="block w-full text-left" onClick={() => setActiveTab("about")}>About Me</button>
-          <button className="block w-full text-left" onClick={() => setActiveTab("help")}>Help & Support</button>
+          {['policies', 'claims', 'payments', 'status', 'about', 'help'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`block w-full text-left capitalize ${activeTab === tab ? 'font-bold underline' : ''}`}
+            >
+              {tab.replace('_', ' ')}
+            </button>
+          ))}
         </nav>
         <div className="mt-auto pt-6 border-t border-blue-700">
           <div className="flex items-center gap-2 mb-4">
@@ -209,7 +187,6 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 bg-gray-100 p-8 overflow-y-auto">
         <div className="mb-6">
           <h2 className="text-3xl font-semibold text-gray-800">Welcome, {user?.name ?? "User"}</h2>
@@ -242,13 +219,14 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
             </div>
           </div>
 
-          {/* Render based on active tab */}
-          {activeTab === "policies" && renderTable(policies)}
-          {activeTab === "claims" && renderClaimsTable(claims)}
-          {activeTab === "payments" && renderTable(payments)}
-          {activeTab === "documents" && renderTable(documents)}
-          {activeTab === "about" && renderTable(about)}
-          {activeTab === "help" && renderTable(help)}
+          {loading && <p className="text-blue-500">Loading...</p>}
+          {error && <p className="text-red-500">{error}</p>}
+
+          {!loading && !error && (
+            <>
+              {activeTab === "claims" ? renderClaimsTable(dataToRender) : renderTable(dataToRender)}
+            </>
+          )}
         </div>
       </main>
     </div>

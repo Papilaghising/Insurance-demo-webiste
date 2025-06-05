@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const supabase = getSupabase()
       const role = options?.role || options?.userType
-      
+  
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -92,40 +92,94 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           },
         },
       })
-
+  
       console.log('Signup response:', { data, error, role })
-
-      // If signup was successful and user is a policyholder, create profile
-      if (!error && data?.user ) {
-        console.log('Attempting to create profile for user:', data.user.id)
+  
+      // If signup was successful and role is agent or policyholder, create profile
+      if (!error && data?.user && (role === 'policyholder' || role === 'agent')) {
+        console.log(`Creating profile for ${role}:`, data.user.id)
+  
         const { error: profileError } = await supabase
           .from('cprofile')
           .upsert({
             user_id: data.user.id,
             full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || '',
             email: data.user.email,
-            role: role || 'policyholder'
+            role
           })
-
+  
         if (profileError) {
-          console.error('Error creating profile:', profileError)
+          console.error(`Error creating ${role} profile:`, profileError)
         } else {
-          console.log('Profile created successfully')
+          console.log(`${role} profile created successfully`)
         }
       } else {
         console.log('Skipping profile creation:', { 
           hasError: !!error, 
           hasUser: !!data?.user, 
-          isPolicyholder: role === 'policyholder'
+          isValidRole: role === 'policyholder' || role === 'agent',
+          role,
         })
       }
-
+  
       return { error, data }
     } catch (error) {
       console.error("Sign up error:", error)
       return { error, data: null }
     }
   }
+  
+
+  // const signUp = async (email: string, password: string, options?: SignUpOptions) => {
+  //   try {
+  //     const supabase = getSupabase()
+  //     const role = options?.role || options?.userType
+      
+  //     const { data, error } = await supabase.auth.signUp({
+  //       email,
+  //       password,
+  //       options: {
+  //         data: {
+  //           role,
+  //           ...options,
+  //         },
+  //       },
+  //     })
+
+  //     console.log('Signup response:', { data, error, role })
+
+  //     // If signup was successful and user is a policyholder, create profile
+  //     if (!error && data?.user ) {
+  //       console.log('Attempting to create profile for user:', data.user.id)
+  //       const { error: profileError } = await supabase
+  //         .from('cprofile')
+  //         .upsert({
+  //           user_id: data.user.id,
+  //           full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || '',
+  //           email: data.user.email,
+  //           role: role || 'policyholder' 
+  //         })
+
+  //       if (profileError) {
+  //         console.error('Error creating profile:', profileError)
+  //       } else {
+  //         console.log('Profile created successfully')
+  //       }
+  //     } else {
+  //       console.log('Skipping profile creation:', { 
+  //         hasError: !!error, 
+  //         hasUser: !!data?.user, 
+  //         isPolicyholder: role === 'policyholder'
+  //       })
+  //     }
+
+  //     return { error, data }
+  //   } catch (error) {
+  //     console.error("Sign up error:", error)
+  //     return { error, data: null }
+  //   }
+  // }
+
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -134,9 +188,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email,
         password,
       })
-
+  
       if (!error && data?.session) {
-        // Sync session with the server
         await fetch('/api/auth/session', {
           method: 'POST',
           headers: {
@@ -144,25 +197,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           },
           body: JSON.stringify({ session: data.session }),
         })
-
-        // If user is a policyholder, update their profile in cprofile table
-        if (data.session.user.user_metadata?.role === 'policyholder' || 
-            data.session.user.user_metadata?.userType === 'policyholder') {
-          const { error: profileError } = await supabase
-            .from('cprofile')
-            .upsert({
-              user_id: data.session.user.id,
-              full_name: data.session.user.user_metadata?.full_name || data.session.user.user_metadata?.name || '',
-              email: data.session.user.email,
-              role: data.session.user.user_metadata?.role || data.session.user.user_metadata?.userType || 'policyholder'
-            })
-
-          if (profileError) {
-            console.error('Error updating profile:', profileError)
-          }
-        }
       }
-
+  
       return { data, error }
     } catch (error) {
       console.error("Sign in error:", error)

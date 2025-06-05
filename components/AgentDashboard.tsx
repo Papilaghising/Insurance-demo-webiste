@@ -1,13 +1,22 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { UserCircle, LogOut } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
 
-export default function AgentDashboard({ user }: { user: any }) {
+interface User {
+  name: string
+}
+
+export default function AgentDashboard({ user }: { user: User }) {
   const [policyholders, setPolicyholders] = useState<any[]>([])
   const [policies, setPolicies] = useState<any[]>([])
   const [claims, setClaims] = useState<any[]>([])
-  const [activeTab, setActiveTab] = useState("policyholders")
+
+  const [activeTab, setActiveTab] = useState<"policyholders" | "policies" | "claims">("policyholders")
+
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
   const { signOut } = useAuth()
   const router = useRouter()
 
@@ -21,38 +30,60 @@ export default function AgentDashboard({ user }: { user: any }) {
   }
 
   const fetchData = async (type: string) => {
+    setLoading(true)
+    setError(null)
+
     const endpoints: Record<string, string> = {
       policyholders: "/api/agent/policyholders",
       policies: "/api/agent/soldpolicies",
-      claims: "/api/agent/claimsdoc"
+      claims: "/api/agent/claimsdoc",
     }
-  
+
     if (!(type in endpoints)) {
-      console.error("Invalid data type requested:", type);
-      return;
+      setError("Invalid data type requested.")
+      setLoading(false)
+      return
     }
-  
-    const res = await fetch(endpoints[type]);
-    if (!res.ok) {
-      console.error("Failed to fetch:", res.status, res.statusText);
-      return;
+
+    try {
+      const res = await fetch(endpoints[type])
+      if (!res.ok) {
+        setError(`Failed to fetch data: ${res.status} ${res.statusText}`)
+        setLoading(false)
+        return
+      }
+      const data = await res.json()
+
+      if (type === "policyholders") setPolicyholders(data)
+      else if (type === "policies") setPolicies(data)
+      else if (type === "claims") setClaims(data)
+    } catch (err) {
+      setError("Network error occurred.")
+    } finally {
+      setLoading(false)
     }
-    const data = await res.json();
-  
-    if (type === "policyholders") setPolicyholders(data);
-    else if (type === "policies") setPolicies(data);
-    else if (type === "claims") setClaims(data);
-  };  
+  }
+
+  // Auto-fetch data when active tab changes
+  useEffect(() => {
+    fetchData(activeTab)
+  }, [activeTab])
 
   const renderTable = (data: any[]) => {
-    if (!data.length) return null
+    if (loading) return <p>Loading {activeTab}...</p>
+    if (error) return <p className="text-red-600">{error}</p>
+    if (!data.length) return <p>No {activeTab} found.</p>
+
     return (
       <div className="overflow-auto border rounded-lg shadow">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
               {Object.keys(data[0]).map((key) => (
-                <th key={key} className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-left">
+                <th
+                  key={key}
+                  className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-left"
+                >
                   {key}
                 </th>
               ))}
@@ -79,17 +110,45 @@ export default function AgentDashboard({ user }: { user: any }) {
       {/* Sidebar */}
       <aside className="w-64 bg-blue-900 text-white flex flex-col px-4 py-6">
         <h1 className="text-2xl font-bold mb-6">Agent Panel</h1>
-        <nav className="space-y-4">
-          <button className="block w-full text-left" onClick={() => setActiveTab("policyholders")}>Policyholders</button>
-          <button className="block w-full text-left" onClick={() => setActiveTab("policies")}>Policies Sold</button>
-          <button className="block w-full text-left" onClick={() => setActiveTab("claims")}>Claims</button>
+        <nav className="space-y-4" aria-label="Sidebar navigation">
+          <button
+            type="button"
+            aria-current={activeTab === "policyholders" ? "page" : undefined}
+            className={`block w-full text-left px-2 py-1 rounded ${
+              activeTab === "policyholders" ? "font-bold bg-blue-700" : "hover:bg-blue-800"
+            }`}
+            onClick={() => setActiveTab("policyholders")}
+          >
+            Policyholders
+          </button>
+          <button
+            type="button"
+            aria-current={activeTab === "policies" ? "page" : undefined}
+            className={`block w-full text-left px-2 py-1 rounded ${
+              activeTab === "policies" ? "font-bold bg-blue-700" : "hover:bg-blue-800"
+            }`}
+            onClick={() => setActiveTab("policies")}
+          >
+            Policies Sold
+          </button>
+          <button
+            type="button"
+            aria-current={activeTab === "claims" ? "page" : undefined}
+            className={`block w-full text-left px-2 py-1 rounded ${
+              activeTab === "claims" ? "font-bold bg-blue-700" : "hover:bg-blue-800"
+            }`}
+            onClick={() => setActiveTab("claims")}
+          >
+            Claims
+          </button>
         </nav>
         <div className="mt-auto pt-6 border-t border-blue-700">
           <div className="flex items-center gap-2 mb-4">
             <UserCircle className="w-6 h-6" />
             <span>{user?.name ?? "Agent"}</span>
           </div>
-          <button 
+          <button
+            type="button"
             onClick={handleSignOut}
             className="flex items-center gap-2 text-red-300 hover:text-red-100 transition-colors w-full"
           >
@@ -126,10 +185,12 @@ export default function AgentDashboard({ user }: { user: any }) {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-semibold text-gray-700 capitalize">{activeTab}</h3>
             <button
+              type="button"
               onClick={() => fetchData(activeTab)}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+              disabled={loading}
             >
-              Load {activeTab}
+              {loading ? `Loading ${activeTab}...` : `Reload ${activeTab}`}
             </button>
           </div>
           {activeTab === "policyholders" && renderTable(policyholders)}
