@@ -18,7 +18,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
       payments: "/api/mypayments",
       documents: "/api/mydocuments",
       about: "/api/myprofile",
-      help: "/api/support"
+      help: "/api/supports"
     }
 
     if (!(type in endpoints)) {
