@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { getSupabase } from '@/lib/supabase'
 import formidable, { Part } from 'formidable'
 import fs from 'fs'
+import { createWorker } from 'tesseract.js'
 
 export const config = {
   api: {
@@ -15,6 +16,7 @@ interface FileInfo {
   type: string;
   size: number;
   url?: string;
+  text?: string;
 }
 
 const STORAGE_FOLDERS = {
@@ -24,6 +26,22 @@ const STORAGE_FOLDERS = {
 } as const
 
 type FolderType = keyof typeof STORAGE_FOLDERS
+
+// Function to extract text from image/PDF
+async function extractTextFromFile(filePath: string, mimeType: string): Promise<string> {
+  if (mimeType.startsWith('image/')) {
+    const worker = await createWorker('eng');
+    const { data: { text } } = await worker.recognize(filePath);
+    await worker.terminate();
+    return text;
+  } else if (mimeType === 'application/pdf') {
+    // For PDF files, we'll need to implement PDF text extraction
+    // You can use libraries like pdf-parse or pdf2json
+    // For now, returning empty string
+    return '';
+  }
+  return '';
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -45,6 +63,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log('Received files:', Object.keys(files))
 
     const supabase = getSupabase()
+    const claimId = fields.claimId?.[0]
+    
+    if (!claimId) {
+      return res.status(400).json({ error: 'Missing claim ID' })
+    }
+
+    // Get claim data for verification
+    const { data: claimData, error: claimError } = await supabase
+      .from('claims')
+      .select('*')
+      .eq('id', claimId)
+      .single()
+
+    if (claimError || !claimData) {
+      return res.status(400).json({ error: 'Failed to fetch claim data' })
+    }
 
     // Check and create bucket if needed
     console.log('Checking bucket...')
@@ -61,7 +95,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!buckets?.some(b => b.name === 'trueclaim')) {
       console.log('Creating claims bucket...')
       const { error: createError } = await supabase.storage.createBucket('trueclaim', {
-        public: true,
+        public: false, // Changed to private
         fileSizeLimit: 52428800 // 50MB
       })
       if (createError) {
@@ -116,6 +150,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.log(`Reading file: ${safeFileName}`)
         const fileBuffer = fs.readFileSync(file.filepath)
         
+        // Extract text from the file
+        const extractedText = await extractTextFromFile(file.filepath, file.mimetype || '')
+        
         console.log(`Uploading file to ${filePath}`)
         const { data, error: uploadError } = await supabase.storage
           .from('trueclaim')
@@ -131,16 +168,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         console.log(`Successfully uploaded ${safeFileName}`)
-        const { data: { publicUrl } } = supabase.storage
+        
+        // Generate signed URL that expires in 1 hour
+        const { data: { signedUrl } } = await supabase.storage
           .from('trueclaim')
-          .getPublicUrl(data.path)
+          .createSignedUrl(data.path, 3600)
 
         return {
           path: data.path,
           name: file.originalFilename || 'unnamed',
           type: storageFolder,
           size: file.size,
-          url: publicUrl
+          url: signedUrl,
+          text: extractedText
         } as FileInfo
       } catch (error) {
         console.error(`Error processing ${file.originalFilename}:`, error)
@@ -162,16 +202,56 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'No files were uploaded successfully' })
     }
 
+    // Store file metadata in claim_files table
+    const fileRecords = successfulUploads.map(file => ({
+      claim_id: claimId,
+      file_path: file.path,
+      file_name: file.name,
+      file_type: file.type,
+      file_size: file.size,
+      document_type: file.type,
+      uploaded_by: req.headers['x-user-id']
+    }))
+
+    const { error: filesError } = await supabase
+      .from('claim_files')
+      .insert(fileRecords)
+
+    if (filesError) {
+      console.error('Error storing file metadata:', filesError)
+      return res.status(500).json({ error: 'Failed to store file metadata' })
+    }
+
+    // Send documents for AI verification
+    const verificationResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/claims/verify-documents`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        claimId,
+        formData: claimData,
+        documents: {
+          identityDocs: successfulUploads.find(f => f.type === 'identity-documents'),
+          invoices: successfulUploads.find(f => f.type === 'invoices'),
+          supportingDocs: successfulUploads.find(f => f.type === 'supporting-documents')
+        }
+      })
+    })
+
+    const verificationResult = await verificationResponse.json()
+
     console.log(`Successfully uploaded ${successfulUploads.length} files`)
 
     return res.status(200).json({
-      message: 'Files uploaded successfully',
+      message: 'Files uploaded and verified successfully',
       upload_id: uploadId,
       files: successfulUploads.map(file => ({
         name: file.name,
         type: file.type,
         url: file.url
-      }))
+      })),
+      verification: verificationResult
     })
   } catch (error: any) {
     console.error('Upload error:', error)
