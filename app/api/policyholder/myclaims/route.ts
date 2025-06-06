@@ -1,23 +1,25 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { getSupabase } from '../../../lib/supabase'
+import { NextResponse } from 'next/server'
+import { getSupabase } from '@/lib/supabase'
+import { headers } from 'next/headers'
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export async function GET() {
   try {
-    // Initialize Supabase client
     const supabase = getSupabase()
     
     // Get the authorization header
-    const authHeader = req.headers.authorization
+    const headersList = headers()
+    const authHeader = headersList.get('authorization')
+    
     if (!authHeader) {
       console.error('No authorization header found')
-      return res.status(401).json({ error: 'No authorization header' })
+      return NextResponse.json({ error: 'No authorization header' }, { status: 401 })
     }
 
     // Extract the token
     const token = authHeader.split(' ')[1]
     if (!token) {
       console.error('No token found in authorization header')
-      return res.status(401).json({ error: 'No token provided' })
+      return NextResponse.json({ error: 'No token provided' }, { status: 401 })
     }
 
     // Set the auth token for this request
@@ -31,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     if (userError || !user || !user.email) {
       console.error('User error or no email:', userError)
-      return res.status(401).json({ error: 'Invalid token or missing email' })
+      return NextResponse.json({ error: 'Invalid token or missing email' }, { status: 401 })
     }
 
     console.log('Fetching claims for user:', user.email)
@@ -45,13 +47,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (error) {
       console.error('Database error:', error)
-      return res.status(500).json({ error: error.message })
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
     console.log(`Found ${data?.length || 0} claims for user:`, user.email)
-    return res.status(200).json(data || [])
+    return NextResponse.json(data || [])
   } catch (err) {
     console.error('API Error:', err)
-    return res.status(500).json({ error: 'Internal server error' })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+} 

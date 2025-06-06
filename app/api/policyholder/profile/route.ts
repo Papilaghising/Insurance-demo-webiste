@@ -1,17 +1,19 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { getSupabase } from '../../../../lib/supabase'
+import { NextResponse } from 'next/server'
+import { getSupabase } from '@/lib/supabase'
+import { cookies } from 'next/headers'
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export async function GET() {
   try {
     console.log('API: Starting profile display handler')
 
     // Create a Supabase client using the request context
     const supabase = getSupabase()
 
-    // Check for all possible Supabase cookie names
-    const accessToken = req.cookies['sb-access-token']
-    const refreshToken = req.cookies['sb-refresh-token']
-    const authCookie = req.cookies['sb']
+    // Get cookies using the new cookies() API
+    const cookieStore = await cookies()
+    const accessToken = cookieStore.get('sb-access-token')?.value
+    const refreshToken = cookieStore.get('sb-refresh-token')?.value
+    const authCookie = cookieStore.get('sb')?.value
     
     console.log('API: Auth cookies present:', { 
       hasAccessToken: !!accessToken,
@@ -30,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     if (authError || !session) {
       console.log('API: Unauthorized - No valid session')
-      return res.status(401).json({ 
+      return NextResponse.json({ 
         error: 'Unauthorized', 
         details: authError?.message || 'No session found',
         cookies: {
@@ -38,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           hasRefreshToken: !!refreshToken,
           hasAuthCookie: !!authCookie
         }
-      })
+      }, { status: 401 })
     }
 
     const userId = session.user.id
@@ -59,18 +61,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (error) {
       console.log('API: Database error:', error)
-      return res.status(500).json({ error: error.message })
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
     if (!data) {
       console.log('API: Profile not found for user:', userId)
-      return res.status(404).json({ error: 'Profile not found' })
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
     console.log('API: Successfully retrieved profile for user:', userId)
-    return res.status(200).json(data)
+    return NextResponse.json(data)
   } catch (error) {
     console.error('API: Error in profile display handler:', error)
-    return res.status(500).json({ error: 'Internal server error' })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+} 
