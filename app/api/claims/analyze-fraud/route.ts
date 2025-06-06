@@ -142,4 +142,4 @@ IMPORTANT: Return ONLY the JSON object, no other text.`
       details: error.message
     }, { status: 500 })
   }
-} 
+}

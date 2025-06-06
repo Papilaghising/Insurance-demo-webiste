@@ -75,4 +75,4 @@ export async function GET() {
     console.error('API: Error in profile display handler:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-} 
+}

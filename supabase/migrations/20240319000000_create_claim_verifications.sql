@@ -45,4 +45,4 @@ CREATE POLICY "Users can view their own claim verifications"
 CREATE TRIGGER update_claim_verifications_updated_at
   BEFORE UPDATE ON claim_verifications
   FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column(); 
+  EXECUTE FUNCTION update_updated_at_column();

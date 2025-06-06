@@ -95,4 +95,4 @@ export async function POST(request: Request) {
       details: error.message
     }, { status: 500 })
   }
-} 
+}

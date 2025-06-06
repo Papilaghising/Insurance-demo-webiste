@@ -13,4 +13,4 @@ declare module '@google/generative-ai' {
       text(): string;
     };
   }
-} 
+}
