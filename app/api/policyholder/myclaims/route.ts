@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
     
     // Get the authorization header
     const authHeader = req.headers.get('authorization')
-    
+
     if (!authHeader) {
       console.error('No authorization header found')
       return NextResponse.json({ error: 'No authorization header' }, { status: 401 })

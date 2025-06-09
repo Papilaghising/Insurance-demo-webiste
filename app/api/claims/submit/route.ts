@@ -55,17 +55,17 @@ export async function POST(request: Request) {
         .from('claims')
         .insert([{
           email: body.email,
-          full_name: body.fullName,
-          phone: body.phone,
-          policy_number: body.policyNumber,
-          claim_type: body.claimType,
-          date_of_incident: body.dateOfIncident,
-          incident_location: body.incidentLocation,
-          incident_description: body.incidentDescription,
+        full_name: body.fullName,
+        phone: body.phone,
+        policy_number: body.policyNumber,
+        claim_type: body.claimType,
+        date_of_incident: body.dateOfIncident,
+        incident_location: body.incidentLocation,
+        incident_description: body.incidentDescription,
           claim_amount: body.claimAmount,
           public_status: 'SUBMITTED',
-          fraud_risk_score: fraudAnalysis.fraudRiskScore,
-          risk_level: fraudAnalysis.riskLevel,
+        fraud_risk_score: fraudAnalysis.fraudRiskScore,
+        risk_level: fraudAnalysis.riskLevel,
           key_findings: fraudAnalysis.keyFindings
         }])
         .select()
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ 
         message: 'Claim submitted successfully',
         data: claimData,
-        fraudAnalysis 
+        fraudAnalysis
       })
 
     } catch (error: any) {
@@ -96,4 +96,4 @@ export async function POST(request: Request) {
       details: error.message
     }, { status: 500 })
   }
-}
+} 

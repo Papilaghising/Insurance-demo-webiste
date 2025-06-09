@@ -39,6 +39,8 @@ export default function AgentDashboard({ user }: { user: User }) {
   const [policyholders, setPolicyholders] = useState<any[]>([])
   const [policies, setPolicies] = useState<any[]>([])
   const [claims, setClaims] = useState<Claim[]>([])
+  const [selectedType, setSelectedType] = useState<string>("All Types")
+  const [selectedClaimant, setSelectedClaimant] = useState<string>("All Claimants")
   const [activeTab, setActiveTab] = useState<"policyholders" | "policies" | "claims">("claims")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -128,96 +130,185 @@ export default function AgentDashboard({ user }: { user: User }) {
   const renderClaimsTable = (claims: Claim[]) => {
     if (!claims.length) return <p className="text-gray-500 italic">No claims found.</p>
 
+    // Get unique claim types and claimant names for filters
+    const claimTypes = ["All Types", ...Array.from(new Set(claims.map(claim => claim.claim_type)))]
+    const claimants = ["All Claimants", ...Array.from(new Set(claims.map(claim => claim.full_name)))]
+
+    // Filter claims based on selected type and claimant
+    const filteredClaims = claims.filter(claim => {
+      const matchesType = selectedType === "All Types" || claim.claim_type === selectedType
+      const matchesClaimant = selectedClaimant === "All Claimants" || claim.full_name === selectedClaimant
+      return matchesType && matchesClaimant
+    })
+
     return (
-      <div className="overflow-auto rounded-lg shadow-lg border border-gray-200">
-        <table className="min-w-full bg-white text-sm">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-3 text-left font-semibold text-gray-900">Claim ID</th>
-              <th className="px-4 py-3 text-left font-semibold text-gray-900">Claimant</th>
-              <th className="px-4 py-3 text-left font-semibold text-gray-900">Type</th>
-              <th className="px-4 py-3 text-left font-semibold text-gray-900">Amount</th>
-              <th className="px-4 py-3 text-left font-semibold text-gray-900">Status</th>
-              <th className="px-4 py-3 text-left font-semibold text-gray-900">Risk Level</th>
-              <th className="px-4 py-3 text-left font-semibold text-gray-900">Submitted</th>
-              <th className="px-4 py-3 text-left font-semibold text-gray-900">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {claims.map((claim) => (
-              <tr key={claim.claim_id} className="hover:bg-gray-50">
-                <td className="px-4 py-3 font-mono text-sm text-blue-600">{claim.claim_id}</td>
-                <td className="px-4 py-3">
-                  <div>
-                    <div className="font-medium text-gray-900">{claim.full_name}</div>
-                    <div className="text-gray-500 text-xs">{claim.email}</div>
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {claim.claim_type}
-                  </span>
-                </td>
-                <td className="px-4 py-3 font-medium text-gray-900">
-                  ${claim.claim_amount.toLocaleString()}
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClasses(claim.public_status)}`}>
-                    {claim.public_status?.replace("_", " ") || 'Unknown'}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRiskLevelBadgeClasses(claim.risk_level)}`}>
-                    {claim.risk_level || 'N/A'}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-gray-500 text-sm">
-                  {mounted ? formatDate(claim.created_at) : ''}
-                </td>
-                <td className="px-4 py-3">
-                  <button 
-                    onClick={() => {}} 
-                    className="text-blue-600 hover:text-blue-800 font-medium text-sm"
-                  >
-                    Review
-                  </button>
-                </td>
+      <>
+        <div className="mb-4 flex gap-4">
+          {/* Type Filter */}
+          <div className="flex-1">
+            <select
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+            >
+              {claimTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          {/* Claimant Filter */}
+          <div className="flex-1">
+            <select
+              value={selectedClaimant}
+              onChange={(e) => setSelectedClaimant(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
+            >
+              {claimants.map((claimant) => (
+                <option key={claimant} value={claimant}>
+                  {claimant}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="overflow-auto rounded-lg shadow-lg border border-gray-200">
+          <table className="min-w-full bg-white text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 text-left font-semibold text-gray-900">Claim ID</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-900">Claimant</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-900">Type</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-900">Amount</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-900">Status</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-900">Risk Level</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-900">Submitted</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-900">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {filteredClaims.map((claim) => (
+                <tr key={claim.claim_id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 font-mono text-sm text-blue-600">{claim.claim_id}</td>
+                  <td className="px-4 py-3">
+                    <div>
+                      <div className="font-medium text-gray-900">{claim.full_name}</div>
+                      <div className="text-gray-500 text-xs">{claim.email}</div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {claim.claim_type}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 font-medium text-gray-900">
+                    ${claim.claim_amount.toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClasses(claim.public_status)}`}>
+                      {claim.public_status?.replace("_", " ") || 'Unknown'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRiskLevelBadgeClasses(claim.risk_level)}`}>
+                      {claim.risk_level || 'N/A'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-gray-500 text-sm">
+                    {mounted ? formatDate(claim.created_at) : ''}
+                  </td>
+                  <td className="px-4 py-3">
+                    <button 
+                      onClick={() => {}} 
+                      className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                    >
+                      Review
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </>
     )
   }
 
   const renderPolicyholdersTable = (data: any[]) => {
-    if (!data.length) return <p className="text-gray-500 italic">No policyholders found.</p>
+    if (!data.length) return (
+      <div className="text-center py-12">
+        <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+        <p className="text-gray-500 text-lg">No policyholders found</p>
+        <p className="text-gray-400 text-sm">Policyholders will appear here once they are added to the system.</p>
+      </div>
+    )
 
     return (
       <div className="overflow-auto rounded-lg shadow-lg border border-gray-200">
         <table className="min-w-full bg-white text-sm">
           <thead className="bg-gray-50">
             <tr>
-              {Object.keys(data[0]).map((key) => (
-                <th key={key} className="px-4 py-3 text-left font-semibold text-gray-900">
-                  {key.replace(/_/g, " ").toUpperCase()}
-                </th>
-              ))}
+              <th className="px-4 py-3 text-left font-semibold text-gray-900">Name</th>
+              <th className="px-4 py-3 text-left font-semibold text-gray-900">Email</th>
+              <th className="px-4 py-3 text-left font-semibold text-gray-900">Phone</th>
+              <th className="px-4 py-3 text-left font-semibold text-gray-900">Policy Count</th>
+              <th className="px-4 py-3 text-left font-semibold text-gray-900">Status</th>
+              <th className="px-4 py-3 text-left font-semibold text-gray-900">Join Date</th>
               <th className="px-4 py-3 text-left font-semibold text-gray-900">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {data.map((row, idx) => (
+            {data.map((policyholder, idx) => (
               <tr key={idx} className="hover:bg-gray-50">
-                {Object.entries(row).map(([key, val], i) => (
-                  <td key={i} className="px-4 py-3 text-gray-900">
-                    {Array.isArray(val) ? val.join(", ") : String(val)}
-                  </td>
-                ))}
                 <td className="px-4 py-3">
-                  <button className="text-blue-600 hover:text-blue-800 font-medium text-sm">
-                    View Details
-                  </button>
+                  <div className="flex items-center">
+                    <div className="h-8 w-8 flex-shrink-0 rounded-full bg-blue-100 flex items-center justify-center">
+                      <span className="font-medium text-blue-800">
+                        {policyholder.name?.charAt(0)?.toUpperCase() || '?'}
+                      </span>
+                    </div>
+                    <div className="ml-3">
+                      <div className="font-medium text-gray-900">{policyholder.name}</div>
+                      <div className="text-gray-500 text-xs">ID: {policyholder.id}</div>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-gray-600">{policyholder.email}</td>
+                <td className="px-4 py-3 text-gray-600">{policyholder.phone || 'N/A'}</td>
+                <td className="px-4 py-3">
+                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {policyholder.policy_count || 0} policies
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    policyholder.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+                    policyholder.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {policyholder.status || 'Unknown'}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-gray-500 text-sm">
+                  {mounted && policyholder.join_date ? formatDate(policyholder.join_date) : ''}
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => {}} 
+                      className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                    >
+                      View Details
+                    </button>
+                    <button 
+                      onClick={() => {}} 
+                      className="text-gray-600 hover:text-gray-800 font-medium text-sm"
+                    >
+                      View Policies
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
