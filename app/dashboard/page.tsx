@@ -31,8 +31,8 @@ export default function DashboardPage() {
 
   // Render appropriate dashboard based on role
   return userRole === 'agent' ? (
-    <AgentDashboard user={user} />
+    <AgentDashboard user={{...user, name: user.user_metadata?.name || ''}} />
   ) : (
-    <PolicyholderDashboard user={user} />
+    <PolicyholderDashboard user={{...user, name: user.user_metadata?.name || ''}} />
   )
 }
