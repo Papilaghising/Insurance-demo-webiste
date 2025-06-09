@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     console.log('Claim submission body:', body)
 
     // Construct the API URL correctly
-    const headersList = headers()
+    const headersList = await headers()
     const host = headersList.get('host') || 'localhost:3000'
     const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http'
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`
@@ -50,11 +50,35 @@ export async function POST(request: Request) {
         throw new Error('Invalid fraud analysis response')
       }
 
-      // Process the claim submission here...
-      // Add your claim submission logic
+      // Insert the claim into the database
+      const { data: claimData, error: claimError } = await supabase
+        .from('claims')
+        .insert([{
+          email: body.email,
+          full_name: body.fullName,
+          phone: body.phone,
+          policy_number: body.policyNumber,
+          claim_type: body.claimType,
+          date_of_incident: body.dateOfIncident,
+          incident_location: body.incidentLocation,
+          incident_description: body.incidentDescription,
+          claim_amount: body.claimAmount,
+          public_status: 'SUBMITTED',
+          fraud_risk_score: fraudAnalysis.fraudRiskScore,
+          risk_level: fraudAnalysis.riskLevel,
+          key_findings: fraudAnalysis.keyFindings
+        }])
+        .select()
+        .single()
+
+      if (claimError) {
+        console.error('Database error:', claimError)
+        throw new Error(claimError.message)
+      }
 
       return NextResponse.json({ 
         message: 'Claim submitted successfully',
+        data: claimData,
         fraudAnalysis 
       })
 
@@ -72,4 +96,4 @@ export async function POST(request: Request) {
       details: error.message
     }, { status: 500 })
   }
-} 
+}

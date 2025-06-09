@@ -1,32 +1,23 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
-import { headers } from 'next/headers'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const supabase = getSupabase()
     
     // Get the authorization header
-    const headersList = headers()
-    const authHeader = headersList.get('authorization')
+    const authHeader = req.headers.get('authorization')
     
     if (!authHeader) {
       console.error('No authorization header found')
       return NextResponse.json({ error: 'No authorization header' }, { status: 401 })
     }
 
-    // Extract the token
     const token = authHeader.split(' ')[1]
     if (!token) {
       console.error('No token found in authorization header')
       return NextResponse.json({ error: 'No token provided' }, { status: 401 })
     }
-
-    // Set the auth token for this request
-    supabase.auth.setSession({
-      access_token: token,
-      refresh_token: ''
-    })
 
     // Get the user from the session
     const { data: { user }, error: userError } = await supabase.auth.getUser(token)
@@ -38,7 +29,7 @@ export async function GET() {
 
     console.log('Fetching claims for user:', user.email)
 
-    // Get claims for the current user
+    // Get claims for the user
     const { data, error } = await supabase
       .from('claims')
       .select('*')

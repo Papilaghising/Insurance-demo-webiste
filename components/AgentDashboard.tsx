@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react"
 import { UserCircle, LogOut } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
+import { getSupabase } from "@/lib/supabase"
 
 interface User {
   name: string
@@ -36,7 +37,7 @@ export default function AgentDashboard({ user }: { user: User }) {
     const endpoints: Record<string, string> = {
       policyholders: "/api/agent/policyholders",
       policies: "/api/agent/soldpolicies",
-      claims: "/api/agent/claimsdoc",
+      claims: "/api/agent/allclaims",
     }
 
     if (!(type in endpoints)) {
@@ -46,12 +47,30 @@ export default function AgentDashboard({ user }: { user: User }) {
     }
 
     try {
-      const res = await fetch(endpoints[type])
+      // Get the session token
+      const supabase = getSupabase()
+      const { data: { session } } = await supabase.auth.getSession()
+
+      if (!session) {
+        router.push('/login')
+        return
+      }
+
+      const res = await fetch(endpoints[type], {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        credentials: 'include'
+      })
+
       if (!res.ok) {
         setError(`Failed to fetch data: ${res.status} ${res.statusText}`)
         setLoading(false)
         return
       }
+
       const data = await res.json()
 
       if (type === "policyholders") setPolicyholders(data)
@@ -70,9 +89,7 @@ export default function AgentDashboard({ user }: { user: User }) {
   }, [activeTab])
 
   const renderTable = (data: any[]) => {
-    if (loading) return <p>Loading {activeTab}...</p>
-    if (error) return <p className="text-red-600">{error}</p>
-    if (!data.length) return <p>No {activeTab} found.</p>
+    if (!data.length) return <p className="text-gray-500">No data found.</p>
 
     return (
       <div className="overflow-auto border rounded-lg shadow">
@@ -80,11 +97,8 @@ export default function AgentDashboard({ user }: { user: User }) {
           <thead className="bg-gray-50">
             <tr>
               {Object.keys(data[0]).map((key) => (
-                <th
-                  key={key}
-                  className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-left"
-                >
-                  {key}
+                <th key={key} className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-left">
+                  {key.replace(/_/g, ' ')}
                 </th>
               ))}
             </tr>
@@ -92,9 +106,9 @@ export default function AgentDashboard({ user }: { user: User }) {
           <tbody className="bg-white divide-y divide-gray-100">
             {data.map((row, idx) => (
               <tr key={idx} className="hover:bg-gray-50">
-                {Object.values(row).map((val, i) => (
+                {Object.entries(row).map(([key, val], i) => (
                   <td key={i} className="px-4 py-2 text-sm text-gray-700">
-                    {String(val)}
+                    {Array.isArray(val) ? val.join(', ') : String(val)}
                   </td>
                 ))}
               </tr>
@@ -193,9 +207,18 @@ export default function AgentDashboard({ user }: { user: User }) {
               {loading ? `Loading ${activeTab}...` : `Reload ${activeTab}`}
             </button>
           </div>
-          {activeTab === "policyholders" && renderTable(policyholders)}
-          {activeTab === "policies" && renderTable(policies)}
-          {activeTab === "claims" && renderTable(claims)}
+          {error && <p className="text-red-500 mb-4">{error}</p>}
+          {loading ? (
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : (
+            <>
+              {activeTab === "policyholders" && renderTable(policyholders)}
+              {activeTab === "policies" && renderTable(policies)}
+              {activeTab === "claims" && renderTable(claims)}
+            </>
+          )}
         </div>
       </main>
     </div>

@@ -135,9 +135,9 @@ export default function SubmitClaimPage() {
       const res = await fetch('/api/claims/submit', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
         },
-        body: new URLSearchParams({
+        body: JSON.stringify({
           fullName: form.fullName,
           email: form.email,
           phone: form.phone,
@@ -148,7 +148,7 @@ export default function SubmitClaimPage() {
           incidentDescription: form.incidentDescription,
           claimAmount: form.claimAmount.toString(),
           consent: form.consent.toString()
-        }).toString()
+        })
       })
 
       const jsonResponse = await res.json()

@@ -5,8 +5,32 @@ import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
 import { getSupabase } from "@/lib/supabase"
 
+interface Claim {
+  claim_id: string;
+  claim_type: string;
+  claim_amount: number;
+  date_of_incident: string;
+  incident_description: string;
+  public_status: string;
+  created_at: string;
+}
+
+interface StatusSummary {
+  total: number;
+  submitted: number;
+  in_review: number;
+  approved: number;
+  rejected: number;
+  total_amount: number;
+  claims: Claim[];
+}
+
+type DataMap = {
+  [key: string]: any[] | StatusSummary;
+}
+
 export default function PolicyholderDashboard({ user }: { user: any }) {
-  const [dataMap, setDataMap] = useState<Record<string, any[]>>({})
+  const [dataMap, setDataMap] = useState<DataMap>({})
   const [activeTab, setActiveTab] = useState("policies")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -125,7 +149,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
           <tbody className="bg-white divide-y divide-gray-100">
             {claims.map((claim, idx) => (
               <tr key={idx} className="hover:bg-gray-50">
-                <td className="px-4 py-2 text-sm text-gray-700 font-mono">{claim.id}</td>
+                <td className="px-4 py-2 text-sm text-gray-700 font-mono">{claim.claim_id}</td>
                 <td className="px-4 py-2 text-sm text-gray-700">{claim.claim_type}</td>
                 <td className="px-4 py-2 text-sm text-gray-700">
                   {new Date(claim.date_of_incident).toLocaleDateString()}
@@ -155,7 +179,9 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
     )
   }
 
-  const dataToRender = dataMap[activeTab] || []
+  const dataToRender = activeTab === "status" && (dataMap[activeTab] as StatusSummary)?.claims 
+    ? (dataMap[activeTab] as StatusSummary).claims 
+    : (dataMap[activeTab] as any[]) || []
 
   return (
     <div className="flex h-screen">
