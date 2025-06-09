@@ -213,8 +213,20 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
 
       <main className="flex-1 p-10 overflow-y-auto">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-800">Welcome, {user?.name ?? "User"}</h2>
-        </div>
+        <h2 className="text-3xl font-bold text-gray-800">
+          Welcome, {user?.name 
+            ? user.name 
+            : user?.email 
+              ? user.email
+                  .split('@')[0]
+                  .replace(/\./g, ' ')
+                  .replace(/\b\w/g, (c: string) => c.toUpperCase()) 
+              : "Policyholder"}!
+        </h2>
+        <p className="text-gray-600 mt-1">
+        We're here to help you through your claim — let's get started.
+        </p>
+        </div>       
 
         <div className="mb-6 flex justify-between items-center">
           <h3 className="text-xl font-semibold text-gray-700 capitalize">{activeTab}</h3>
