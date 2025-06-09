@@ -1,5 +1,6 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import { getSupabase } from '@/lib/supabase';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
+import { getSupabase } from '../../../../lib/supabase';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Initialize Gemini AI
@@ -13,16 +14,13 @@ interface DocumentVerificationResult {
   matchScore: number;
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export async function POST(req: NextRequest) {
   try {
-    const { claimId, formData, documents } = req.body;
+    const body = await req.json();
+    const { claimId, formData, documents } = body;
 
     if (!claimId || !formData || !documents) {
-      return res.status(400).json({ error: 'Missing required data' });
+      return NextResponse.json({ error: 'Missing required data' }, { status: 400 });
     }
 
     const results: {
@@ -145,40 +143,35 @@ Return ONLY the JSON object, no other text.`;
 
     if (dbError) {
       console.error('Database error:', dbError);
-      return res.status(500).json({ error: 'Failed to store verification results' });
+      return NextResponse.json({ error: 'Failed to store verification results' }, { status: 500 });
     }
 
-    return res.status(200).json({
+    return NextResponse.json({
       message: 'Document verification completed',
       results
-    });
+    }, { status: 200 });
 
   } catch (error: any) {
     console.error('Document verification error:', error);
-    return res.status(500).json({
+    return NextResponse.json({
       error: 'Failed to verify documents',
       details: error.message
-    });
+    }, { status: 500 });
   }
 }
 
 function calculateOverallConfidence(results: any): number {
   const scores = [];
-  if (results.identityVerification) scores.push(results.identityVerification.confidence);
-  if (results.invoiceVerification) scores.push(results.invoiceVerification.confidence);
-  if (results.supportingDocsVerification) scores.push(results.supportingDocsVerification.confidence);
+  if (results.identityVerification?.confidence) scores.push(results.identityVerification.confidence);
+  if (results.invoiceVerification?.confidence) scores.push(results.invoiceVerification.confidence);
+  if (results.supportingDocsVerification?.confidence) scores.push(results.supportingDocsVerification.confidence);
   
   return scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
 }
 
 function determineVerificationStatus(results: any): string {
-  const threshold = 70; // Confidence threshold for automatic approval
-  
-  if (!Object.keys(results).length) return 'PENDING';
-  
-  const failedVerifications = Object.values(results).filter((r: any) => !r.isValid);
-  if (failedVerifications.length > 0) return 'REJECTED';
-  
-  const avgConfidence = calculateOverallConfidence(results);
-  return avgConfidence >= threshold ? 'VERIFIED' : 'NEEDS_REVIEW';
+  const confidence = calculateOverallConfidence(results);
+  if (confidence >= 80) return 'VERIFIED';
+  if (confidence >= 50) return 'NEEDS_REVIEW';
+  return 'REJECTED';
 } 

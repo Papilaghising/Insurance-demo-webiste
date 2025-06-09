@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react"
 import { UserCircle, LogOut } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
+import { getSupabase } from "@/lib/supabase"
 
 interface User {
   name: string
@@ -46,18 +47,57 @@ export default function AgentDashboard({ user }: { user: User }) {
     }
 
     try {
-      const res = await fetch(endpoints[type])
-      if (!res.ok) {
-        setError(`Failed to fetch data: ${res.status} ${res.statusText}`)
-        setLoading(false)
+      const supabase = getSupabase()
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+      if (sessionError) {
+        console.error('Session error:', sessionError)
+        setError("Authentication error. Please try signing in again.")
+        router.push('/login')
         return
       }
+
+      if (!session) {
+        console.error('No session found')
+        setError("Your session has expired. Please sign in again.")
+        router.push('/login')
+        return
+      }
+
+      const res = await fetch(endpoints[type], {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        credentials: 'include'
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}))
+        console.error('API Error:', {
+          status: res.status,
+          statusText: res.statusText,
+          errorData
+        })
+        
+        if (res.status === 401) {
+          setError("Your session has expired. Please sign in again.")
+          router.push('/login')
+          return
+        }
+        
+        setError(errorData.error || "Failed to fetch data.")
+        return
+      }
+
       const data = await res.json()
 
       if (type === "policyholders") setPolicyholders(data)
       else if (type === "policies") setPolicies(data)
       else if (type === "claims") setClaims(data)
     } catch (err) {
+      console.error('Fetch error:', err)
       setError("Network error occurred.")
     } finally {
       setLoading(false)
@@ -97,6 +137,68 @@ export default function AgentDashboard({ user }: { user: User }) {
                     {String(val)}
                   </td>
                 ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
+  const renderClaimsTable = (claims: any[]) => {
+    if (loading) return <p>Loading claims...</p>
+    if (error) return <p className="text-red-600">{error}</p>
+    if (!claims.length) return <p>No claims found.</p>
+
+    return (
+      <div className="overflow-auto border rounded-lg shadow">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-left">Claim ID</th>
+              <th className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-left">Type</th>
+              <th className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-left">Policyholder</th>
+              <th className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-left">Amount</th>
+              <th className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-left">Date</th>
+              <th className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-left">Status</th>
+              <th className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-left">Risk Level</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-100">
+            {claims.map((claim) => (
+              <tr key={claim.claim_id} className="hover:bg-gray-50">
+                <td className="px-4 py-2 text-sm text-gray-700 font-mono">{claim.claim_id}</td>
+                <td className="px-4 py-2 text-sm text-gray-700">{claim.claim_type}</td>
+                <td className="px-4 py-2 text-sm text-gray-700">
+                  <div>
+                    <div>{claim.full_name}</div>
+                    <div className="text-xs text-gray-500">{claim.email}</div>
+                  </div>
+                </td>
+                <td className="px-4 py-2 text-sm text-gray-700">
+                  ${claim.claim_amount?.toLocaleString()}
+                </td>
+                <td className="px-4 py-2 text-sm text-gray-700">
+                  {new Date(claim.date_of_incident).toLocaleDateString()}
+                </td>
+                <td className="px-4 py-2 text-sm">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    claim.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
+                    claim.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
+                    'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {claim.status?.replace('_', ' ')}
+                  </span>
+                </td>
+                <td className="px-4 py-2 text-sm">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    claim.risk_level === 'LOW' ? 'bg-green-100 text-green-800' :
+                    claim.risk_level === 'HIGH' ? 'bg-red-100 text-red-800' :
+                    'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {claim.risk_level}
+                  </span>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -195,7 +297,7 @@ export default function AgentDashboard({ user }: { user: User }) {
           </div>
           {activeTab === "policyholders" && renderTable(policyholders)}
           {activeTab === "policies" && renderTable(policies)}
-          {activeTab === "claims" && renderTable(claims)}
+          {activeTab === "claims" && renderClaimsTable(claims)}
         </div>
       </main>
     </div>

@@ -1,14 +1,12 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { getSupabase } from '@/lib/supabase'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
+import { getSupabase } from '../../../../../lib/supabase'
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'PUT') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
-
+export async function PUT(req: NextRequest) {
   try {
     const supabase = getSupabase()
-    const { fullName, email } = req.body
+    const body = await req.json()
+    const { fullName, email } = body
 
     // Get the user from the session
     const { data: { session }, error: authError } = await supabase.auth.getSession()
@@ -17,10 +15,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log('Auth error debug:', authError) // Debug log
 
     if (authError || !session) {
-      return res.status(401).json({ 
+      return NextResponse.json({ 
         error: 'Unauthorized',
         details: authError?.message || 'No session found'
-      })
+      }, { status: 401 })
     }
 
     // Update the profile in cprofile table
@@ -34,12 +32,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .match({ email: email })
 
     if (updateError) {
-      return res.status(500).json({ error: updateError.message })
+      return NextResponse.json({ error: updateError.message }, { status: 500 })
     }
 
-    return res.status(200).json({ message: 'Profile updated successfully' })
+    return NextResponse.json({ message: 'Profile updated successfully' }, { status: 200 })
   } catch (error) {
     console.error('Error in profile update handler:', error)
-    return res.status(500).json({ error: 'Internal server error' })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+} 

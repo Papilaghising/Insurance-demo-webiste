@@ -42,12 +42,23 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
       }
 
       const supabase = getSupabase()
-      const { data: { session } } = await supabase.auth.getSession()
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
-      if (!session) {
+      if (sessionError) {
+        console.error('Session error:', sessionError)
+        setError("Authentication error. Please try signing in again.")
         router.push('/login')
         return
       }
+
+      if (!session) {
+        console.error('No session found')
+        setError("Your session has expired. Please sign in again.")
+        router.push('/login')
+        return
+      }
+
+      console.log(`Fetching ${type} data...`)
 
       const res = await fetch(endpoints[type], {
         method: 'GET',
@@ -60,14 +71,31 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}))
-        setError("Failed to fetch data.")
+        console.error(`API Error (${res.status}):`, {
+          status: res.status,
+          statusText: res.statusText,
+          errorData
+        })
+        
+        if (res.status === 401) {
+          setError("Your session has expired. Please sign in again.")
+          router.push('/login')
+          return
+        }
+        
+        setError(errorData.error || `Failed to fetch ${type} data.`)
         return
       }
 
       const data = await res.json()
-      setDataMap((prev) => ({ ...prev, [type]: data }))
+      console.log(`Received ${type} data:`, data)
+
+      // Ensure we have an array to work with
+      const items = Array.isArray(data) ? data : []
+      setDataMap((prev) => ({ ...prev, [type]: items }))
     } catch (error) {
-      setError("An unexpected error occurred.")
+      console.error('Fetch error:', error)
+      setError(`An unexpected error occurred while fetching ${type} data.`)
     } finally {
       setLoading(false)
     }
@@ -108,7 +136,14 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
   }
 
   const renderClaimsTable = (claims: any[]) => {
-    if (!claims.length) return <p className="text-gray-500">No claims found. Click "Submit a New Claim" to file a claim.</p>
+    if (!claims || !Array.isArray(claims)) {
+      return <p className="text-gray-500">No claims found. Click "Submit a New Claim" to file a claim.</p>
+    }
+
+    if (claims.length === 0) {
+      return <p className="text-gray-500">No claims found. Click "Submit a New Claim" to file a claim.</p>
+    }
+
     return (
       <div className="overflow-auto border rounded-lg shadow">
         <table className="min-w-full divide-y divide-gray-200">
@@ -124,22 +159,23 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
           </thead>
           <tbody className="bg-white divide-y divide-gray-100">
             {claims.map((claim, idx) => (
-              <tr key={idx} className="hover:bg-gray-50">
-                <td className="px-4 py-2 text-sm text-gray-700 font-mono">{claim.id}</td>
+              <tr key={claim.claim_id || idx} className="hover:bg-gray-50">
+                <td className="px-4 py-2 text-sm text-gray-700 font-mono">{claim.claim_id}</td>
                 <td className="px-4 py-2 text-sm text-gray-700">{claim.claim_type}</td>
                 <td className="px-4 py-2 text-sm text-gray-700">
-                  {new Date(claim.date_of_incident).toLocaleDateString()}
+                  {new Date(claim.incident_date || claim.created_at).toLocaleDateString()}
                 </td>
                 <td className="px-4 py-2 text-sm text-gray-700">
-                  {new Intl.NumberFormat().format(claim.claim_amount)}
+                  ${claim.claim_amount?.toLocaleString()}
                 </td>
                 <td className="px-4 py-2 text-sm">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    claim.public_status === 'SUBMITTED' ? 'bg-blue-100 text-blue-800' :
-                    claim.public_status === 'IN_REVIEW' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-green-100 text-green-800'
+                    claim.public_status === 'Under Review' ? 'bg-yellow-100 text-yellow-800' :
+                    claim.public_status === 'Approved' ? 'bg-green-100 text-green-800' :
+                    claim.public_status === 'Rejected' ? 'bg-red-100 text-red-800' :
+                    'bg-blue-100 text-blue-800'
                   }`}>
-                    {claim.public_status?.replace('_', ' ')}
+                    {claim.public_status}
                   </span>
                 </td>
                 <td className="px-4 py-2 text-sm text-gray-700">
