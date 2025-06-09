@@ -20,8 +20,8 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en" className="scroll-smooth">
-      <body className={`${inter.variable} ${montserrat.variable} font-sans`}>
+    <html lang="en" suppressHydrationWarning className="scroll-smooth">
+      <body className={`font-sans ${inter.variable} ${montserrat.variable}`} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="light">
           <AuthProvider>{children}</AuthProvider>
         </ThemeProvider>
