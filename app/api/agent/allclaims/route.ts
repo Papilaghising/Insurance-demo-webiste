@@ -44,21 +44,19 @@ export async function GET(req: NextRequest) {
       .from('claims')
       .select(`
         claim_id,
-        email,
+        // email,
         full_name,
         phone,
         policy_number,
-        claim_type,
-        date_of_incident,
-        incident_location,
-        incident_description,
+        // claim_type,
+        // date_of_incident,
+        // incident_location,
+        // incident_description,
         claim_amount,
-        public_status,
+        // public_status,
         fraud_risk_score,
         risk_level,
-        key_findings,
-        created_at,
-        updated_at
+        // key_findings
       `)
       .order('created_at', { ascending: false })
 

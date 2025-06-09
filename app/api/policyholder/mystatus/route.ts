@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
 
     console.log('Fetching claim status for user:', user.email)
 
-    // Get claims with their status information
+    // Get claims with only status-relevant fields
     const { data, error } = await supabase
       .from('claims')
       .select(`
@@ -71,7 +71,10 @@ export async function GET(req: NextRequest) {
         claim_amount,
         date_of_incident,
         created_at,
-        public_status
+        public_status,
+        fraud_risk_score,
+        risk_level,
+        key_findings
       `)
       .eq('email', user.email)
       .order('created_at', { ascending: false })
