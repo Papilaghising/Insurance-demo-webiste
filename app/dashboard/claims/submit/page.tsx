@@ -131,13 +131,24 @@ export default function SubmitClaimPage() {
     setSuccess(false)
 
     try {
+      const supabase = getSupabase()
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+      if (sessionError || !session) {
+        console.error('Session error:', sessionError)
+        setError("Your session has expired. Please sign in again.")
+        router.push('/login')
+        return
+      }
+
       // Submit claim data first
       const res = await fetch('/api/claims/submit', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
         },
-        body: new URLSearchParams({
+        body: JSON.stringify({
           fullName: form.fullName,
           email: form.email,
           phone: form.phone,
@@ -146,9 +157,9 @@ export default function SubmitClaimPage() {
           dateOfIncident: form.dateOfIncident,
           incidentLocation: form.incidentLocation,
           incidentDescription: form.incidentDescription,
-          claimAmount: form.claimAmount.toString(),
-          consent: form.consent.toString()
-        }).toString()
+          claimAmount: form.claimAmount,
+          consent: form.consent
+        })
       })
 
       const jsonResponse = await res.json()
