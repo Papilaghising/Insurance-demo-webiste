@@ -2,13 +2,6 @@ import { NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
 import formidable from 'formidable'
 import { type Part } from 'formidable'
-import { Readable } from 'stream'
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-}
 
 export async function POST(request: Request) {
   try {
@@ -22,26 +15,14 @@ export async function POST(request: Request) {
     })
 
     // Convert the Request to a Node.js readable stream
-    const chunks = []
-    const reader = request.body?.getReader()
-    if (!reader) {
+    const readableStream = request.body
+    if (!readableStream) {
       return NextResponse.json({ error: 'No request body' }, { status: 400 })
     }
 
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      chunks.push(value)
-    }
-
-    const buffer = Buffer.concat(chunks)
-    const stream = new Readable()
-    stream.push(buffer)
-    stream.push(null)
-
     console.log('Parsing form data...')
     const [fields, files] = await new Promise((resolve, reject) => {
-      form.parse(stream, (err, fields, files) => {
+      form.parse(readableStream, (err, fields, files) => {
         if (err) reject(err)
         else resolve([fields, files])
       })
@@ -80,19 +61,11 @@ export async function POST(request: Request) {
 
     // Process files and upload to Supabase storage
     const uploadResults = []
-    const uploadedUrls = {}
-
-    for (const [fieldName, file] of Object.entries(files)) {
-      // Create folder based on field name (e.g., identityDocs, supportingDocs, invoices)
-      const folder = fieldName.toLowerCase()
-      const filePath = `${folder}/${file.newFilename}`
-
+    for (const file of Object.values(files)) {
       // Upload file to Supabase storage
-      const { error: uploadError, data } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('trueclaim')
-        .upload(filePath, file, {
-          contentType: file.mimetype || 'application/octet-stream'
-        })
+        .upload(`claims/${file.newFilename}`, file)
 
       if (uploadError) {
         console.error('Upload error:', uploadError)
@@ -102,26 +75,17 @@ export async function POST(request: Request) {
         }, { status: 500 })
       }
 
-      // Get the public URL for the uploaded file
-      const { data: { publicUrl } } = supabase.storage
-        .from('trueclaim')
-        .getPublicUrl(filePath)
-
       uploadResults.push({
         originalName: file.originalFilename,
         storedName: file.newFilename,
         size: file.size,
-        type: file.mimetype,
-        url: publicUrl
+        type: file.mimetype
       })
-
-      uploadedUrls[fieldName] = publicUrl
     }
 
     return NextResponse.json({
       message: 'Files uploaded successfully',
-      files: uploadResults,
-      urls: uploadedUrls
+      files: uploadResults
     })
 
   } catch (error: any) {
@@ -131,4 +95,4 @@ export async function POST(request: Request) {
       details: error.message
     }, { status: 500 })
   }
-} 
+}

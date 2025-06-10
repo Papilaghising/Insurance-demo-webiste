@@ -181,4 +181,4 @@ function determineVerificationStatus(results: any): string {
   
   const avgConfidence = calculateOverallConfidence(results);
   return avgConfidence >= threshold ? 'VERIFIED' : 'NEEDS_REVIEW';
-} 
+}

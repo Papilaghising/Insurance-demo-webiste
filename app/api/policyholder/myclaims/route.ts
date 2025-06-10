@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'No token provided' }, { status: 401 })
     }
 
-    // Get the user from the sessions
+    // Get the user from the session
     const { data: { user }, error: userError } = await supabase.auth.getUser(token)
     
     if (userError || !user || !user.email) {
@@ -47,4 +47,4 @@ export async function GET(req: NextRequest) {
     console.error('API Error:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-} 
+}

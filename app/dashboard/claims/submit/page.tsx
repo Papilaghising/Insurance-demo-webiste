@@ -1,23 +1,25 @@
-"use client"
-import React, { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/contexts/auth-context"
-import { getSupabase } from "@/lib/supabase"
+"use client";
+
+import React, { useState, useEffect } from 'react';
 import { 
-  UserIcon, 
-  DocumentTextIcon, 
-  ClipboardDocumentCheckIcon, 
-  CurrencyDollarIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-  CloudArrowUpIcon,
-  ShieldCheckIcon,
-  CalendarDaysIcon,
-  MapPinIcon,
-  EnvelopeIcon,
-  PhoneIcon,
-  IdentificationIcon
-} from '@heroicons/react/24/outline'
+  User, 
+  FileText, 
+  ClipboardCheck, 
+  DollarSign,
+  CheckCircle,
+  AlertTriangle,
+  Upload,
+  Shield,
+  Calendar,
+  MapPin,
+  Mail,
+  Phone,
+  CreditCard,
+  Camera,
+  Clock,
+  Eye,
+  ArrowLeft
+} from 'lucide-react';
 
 interface FormState {
   fullName: string;
@@ -68,7 +70,6 @@ const FileUpload = ({
     setDragActive(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      // Create a synthetic event
       const syntheticEvent = {
         target: {
           name,
@@ -83,7 +84,7 @@ const FileUpload = ({
     <div className="space-y-2">
       <label className="block text-sm font-medium text-gray-700">{label}</label>
       <div
-        className={`relative border-2 border-dashed rounded-xl p-6 transition-all duration-300 ${
+        className={`relative border-2 border-dashed rounded-lg p-6 transition-colors duration-200 ${
           dragActive
             ? 'border-blue-400 bg-blue-50'
             : file
@@ -103,24 +104,41 @@ const FileUpload = ({
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         />
         <div className="text-center">
-          <CloudArrowUpIcon className={`mx-auto h-12 w-12 transition-colors duration-300 ${
-            file ? 'text-green-500' : 'text-gray-400'
-          }`} />
-          <div className="mt-4">
+          <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4 ${
+            file 
+              ? 'bg-green-100 text-green-600' 
+              : 'bg-gray-100 text-gray-400'
+          }`}>
             {file ? (
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-green-700">{file.name}</p>
-                <p className="text-xs text-green-600">File selected successfully</p>
-              </div>
+              <CheckCircle className="w-6 h-6" />
             ) : (
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-900">
-                  Drop your file here, or <span className="text-blue-600">browse</span>
-                </p>
-                <p className="text-xs text-gray-500">{description}</p>
-              </div>
+              <Upload className="w-6 h-6" />
             )}
           </div>
+          
+          {file ? (
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-green-700">{file.name}</p>
+              <p className="text-xs text-green-600">File uploaded successfully</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-gray-900">
+                Drop your file here, or <span className="text-blue-600 underline">browse files</span>
+              </p>
+              <p className="text-xs text-gray-500">{description}</p>
+              <div className="flex items-center justify-center space-x-4 text-xs text-gray-400 mt-3">
+                <span className="flex items-center space-x-1">
+                  <Camera className="w-3 h-3" />
+                  <span>Images</span>
+                </span>
+                <span className="flex items-center space-x-1">
+                  <FileText className="w-3 h-3" />
+                  <span>PDFs</span>
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -132,26 +150,41 @@ const FormSection = ({
   title, 
   children, 
   step, 
-  isActive = false 
+  isActive = false,
+  isCompleted = false
 }: {
   icon: React.ComponentType<any>;
   title: string;
   children: React.ReactNode;
   step: number;
   isActive?: boolean;
+  isCompleted?: boolean;
 }) => (
-  <div className={`bg-white rounded-2xl shadow-sm border transition-all duration-300 ${
-    isActive ? 'ring-2 ring-blue-500 shadow-lg' : 'hover:shadow-md'
+  <div className={`bg-white rounded-lg shadow-sm border transition-all duration-200 ${
+    isActive ? 'ring-2 ring-blue-500 shadow-md' : 'hover:shadow-md'
   }`}>
     <div className="p-6 border-b border-gray-100">
       <div className="flex items-center space-x-3">
-        <div className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors duration-300 ${
-          isActive ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'
+        <div className={`flex items-center justify-center w-10 h-10 rounded-lg transition-colors duration-200 ${
+          isCompleted
+            ? 'bg-green-100 text-green-600'
+            : isActive 
+            ? 'bg-blue-100 text-blue-600' 
+            : 'bg-gray-100 text-gray-500'
         }`}>
           <Icon className="w-5 h-5" />
         </div>
-        <div>
-          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Step {step}</span>
+        <div className="flex-1">
+          <div className="flex items-center space-x-2 mb-1">
+            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Step {step}
+            </span>
+            {isCompleted && (
+              <span className="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                Completed
+              </span>
+            )}
+          </div>
           <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
         </div>
       </div>
@@ -183,7 +216,7 @@ const InputField = ({
   icon?: React.ComponentType<any>;
   [key: string]: any;
 }) => (
-  <div className="space-y-1">
+  <div className="space-y-2">
     <label className="block text-sm font-medium text-gray-700">{label}</label>
     <div className="relative">
       {Icon && (
@@ -198,9 +231,9 @@ const InputField = ({
         onChange={onChange}
         required={required}
         placeholder={placeholder}
-        className={`block w-full rounded-xl border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors duration-200 ${
-          Icon ? 'pl-10' : ''
-        } py-3 px-4`}
+        className={`block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors duration-200 ${
+          Icon ? 'pl-10' : 'pl-3'
+        } pr-3 py-3 text-gray-900`}
         {...props}
       />
     </div>
@@ -224,7 +257,7 @@ const TextAreaField = ({
   placeholder?: string;
   rows?: number;
 }) => (
-  <div className="space-y-1">
+  <div className="space-y-2">
     <label className="block text-sm font-medium text-gray-700">{label}</label>
     <textarea
       name={name}
@@ -233,7 +266,7 @@ const TextAreaField = ({
       required={required}
       placeholder={placeholder}
       rows={rows}
-      className="block w-full rounded-xl border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors duration-200 py-3 px-4"
+      className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors duration-200 py-3 px-3 text-gray-900 resize-none"
     />
   </div>
 );
@@ -255,14 +288,14 @@ const SelectField = ({
   options: { value: string; label: string }[];
   placeholder?: string;
 }) => (
-  <div className="space-y-1">
+  <div className="space-y-2">
     <label className="block text-sm font-medium text-gray-700">{label}</label>
     <select
       name={name}
       value={value}
       onChange={onChange}
       required={required}
-      className="block w-full rounded-xl border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors duration-200 py-3 px-4"
+      className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors duration-200 py-3 px-3 text-gray-900"
     >
       <option value="">{placeholder}</option>
       {options.map((option) => (
@@ -274,7 +307,7 @@ const SelectField = ({
   </div>
 );
 
-export default function SubmitClaimPage() {
+function App() {
   const [form, setForm] = useState<FormState>({
     fullName: '',
     email: '',
@@ -289,153 +322,72 @@ export default function SubmitClaimPage() {
     invoices: null,
     claimAmount: '',
     consent: false,
-  })
-  const [submitting, setSubmitting] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({})
-  const [success, setSuccess] = useState(false)
-  const [error, setError] = useState('')
-  const [responseData, setResponseData] = useState<any>(null)
-  const router = useRouter()
-  const { user } = useAuth()
+  });
   
-  useEffect(() => {
-    if (success) {
-      return () => {}
-    }
-  }, [success, router])
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+  const [responseData, setResponseData] = useState<any>(null);
+  const [currentStep, setCurrentStep] = useState(1);
 
   useEffect(() => {
-    if (!user) {
-      router.push('/login')
+    // Auto-advance step based on form completion
+    if (form.fullName && form.email && form.phone && form.identityDocs) {
+      setCurrentStep(Math.max(currentStep, 2));
     }
-  }, [user, router])
+    if (form.policyNumber && form.claimType && form.dateOfIncident) {
+      setCurrentStep(Math.max(currentStep, 3));
+    }
+    if (form.incidentLocation && form.incidentDescription) {
+      setCurrentStep(Math.max(currentStep, 4));
+    }
+    if (form.claimAmount) {
+      setCurrentStep(Math.max(currentStep, 5));
+    }
+  }, [form, currentStep]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type, checked, files } = e.target as HTMLInputElement
+    const { name, value, type, checked, files } = e.target as HTMLInputElement;
   
     if (type === 'checkbox') {
-      setForm((f: FormState) => ({ ...f, [name]: checked }))
+      setForm((f: FormState) => ({ ...f, [name]: checked }));
     } else if (type === 'file' && files && files.length > 0) {
-      const normalizedName = name.charAt(0).toLowerCase() + name.slice(1)
-      setForm((f: FormState) => ({ ...f, [normalizedName]: files[0] }))
+      const normalizedName = name.charAt(0).toLowerCase() + name.slice(1);
+      setForm((f: FormState) => ({ ...f, [normalizedName]: files[0] }));
     } else {
-      setForm((f: FormState) => ({ ...f, [name]: value }))
+      setForm((f: FormState) => ({ ...f, [name]: value }));
     }
-  }
-
-  const uploadFiles = async (claimId: string) => {
-    const formData = new FormData()
-    formData.append('claimId', claimId)
-
-    let hasFiles = false
-    if (form.identityDocs) {
-      formData.append('identityDocs', form.identityDocs)
-      hasFiles = true
-    }
-    if (form.supportingDocs) {
-      formData.append('supportingDocs', form.supportingDocs)
-      hasFiles = true
-    }
-    if (form.invoices) {
-      formData.append('invoices', form.invoices)
-      hasFiles = true
-    }
-
-    if (!hasFiles) {
-      return null
-    }
-
-    try {
-      const supabase = getSupabase()
-      const { data: { session } } = await supabase.auth.getSession()
-
-      if (!session) {
-        throw new Error('No valid session found')
-      }
-
-      const uploadRes = await fetch('/api/claims/upload', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        credentials: 'same-origin'
-      })
-
-      if (!uploadRes.ok) {
-        const errorData = await uploadRes.json()
-        console.error('Upload failed:', errorData)
-        throw new Error(errorData.details || errorData.error || 'Failed to upload files')
-      }
-
-      const responseData = await uploadRes.json()
-      return responseData
-    } catch (error: any) {
-      console.error('Upload error:', error)
-      throw new Error(error.message || 'Failed to upload files')
-    }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSubmitting(true)
-    setError('')
-    setSuccess(false)
-
-    try {
-      // First upload files if any exist
-      let fileUrls = null
-      if (form.supportingDocs || form.identityDocs || form.invoices) {
-        try {
-          const uploadResult = await uploadFiles('temp') // We'll update this with actual claim ID later
-          if (uploadResult && uploadResult.urls) {
-            fileUrls = uploadResult.urls
-          }
-        } catch (uploadError: any) {
-          console.error('File upload error:', uploadError)
-          throw new Error(uploadError.message || 'Failed to upload files')
-        }
-      }
-
-      // Then submit claim data with file URLs if available
-      const claimData = {
-        fullName: form.fullName,
-        email: form.email,
-        phone: form.phone,
-        policyNumber: form.policyNumber,
-        claimType: form.claimType,
-        dateOfIncident: form.dateOfIncident,
-        incidentLocation: form.incidentLocation,
-        incidentDescription: form.incidentDescription,
-        claimAmount: form.claimAmount.toString(),
-        consent: form.consent.toString(),
-        fileUrls // Include file URLs in claim data
-      }
-
-      const res = await fetch('/api/claims/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+    e.preventDefault();
+    setSubmitting(true);
+    setError('');
+    
+    // Simulate API call with fraud analysis data (stored in database, not shown to client)
+    setTimeout(() => {
+      setResponseData({
+        data: {
+          id: 'CLM-' + Math.random().toString(36).substr(2, 9).toUpperCase(),
+          status: 'SUBMITTED',
+          public_status: 'SUBMITTED'
         },
-        body: JSON.stringify(claimData)
-      })
-
-      const jsonResponse = await res.json()
-      console.log('Claim submission response:', jsonResponse)
-
-      if (!res.ok) {
-        throw new Error(jsonResponse.error || 'Failed to submit form')
-      }
-
-      setResponseData(jsonResponse)
-      setSuccess(true)
-    } catch (err: any) {
-      console.error('Form submission error:', err)
-      setError(err.message || 'Error submitting form')
-    } finally {
-      setSubmitting(false)
-    }
-  }
+        // This fraud analysis data would be stored in database for agents only
+        fraudAnalysis: {
+          fraudRiskScore: Math.floor(Math.random() * 30) + 10,
+          riskLevel: 'LOW',
+          recommendation: 'APPROVE',
+          keyFindings: [
+            'Policy holder has good claim history',
+            'Incident details are consistent',
+            'Supporting documentation is complete'
+          ]
+        }
+      });
+      setSuccess(true);
+      setSubmitting(false);
+    }, 2000);
+  };
 
   const claimTypeOptions = [
     { value: 'Accident', label: 'Accident' },
@@ -448,181 +400,138 @@ export default function SubmitClaimPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
             {/* Success Header */}
-            <div className="bg-gradient-to-r from-green-500 to-emerald-500 px-8 py-12 text-center">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full mb-6">
-                <CheckCircleIcon className="w-12 h-12 text-green-500" />
+            <div className="bg-green-500 px-8 py-12 text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full mb-6">
+                <CheckCircle className="w-10 h-10 text-green-500" />
               </div>
               <h2 className="text-3xl font-bold text-white mb-2">Claim Submitted Successfully!</h2>
-              <p className="text-green-100 text-lg">Your claim is now being processed and will be reviewed shortly.</p>
+              <p className="text-green-100 text-lg">Your claim has been received and is now being processed.</p>
             </div>
 
             {/* Claim Details */}
-            <div className="p-8">
+            <div className="p-8 space-y-8">
               {/* Status Banner */}
-              <div className="bg-green-50 border border-green-200 rounded-2xl p-6 mb-8">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <ShieldCheckIcon className="w-8 h-8 text-green-600" />
+                    <Shield className="w-6 h-6 text-blue-600" />
                     <div>
-                      <h3 className="text-lg font-semibold text-green-900">Claim Received</h3>
-                      <p className="text-green-700">We've received your {form.claimType} claim and will begin processing immediately.</p>
+                      <h3 className="text-lg font-semibold text-blue-900">Claim Received</h3>
+                      <p className="text-blue-700">We've received your {form.claimType} claim and will begin processing immediately.</p>
                     </div>
                   </div>
-                  <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${
-                    user?.role === 'agent' ? (
-                      responseData?.data?.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
-                      responseData?.data?.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    ) : (
-                      responseData?.data?.public_status === 'SUBMITTED' ? 'bg-blue-100 text-blue-800' :
-                      responseData?.data?.public_status === 'IN_REVIEW' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-green-100 text-green-800'
-                    )
-                  }`}>
-                    {user?.role === 'agent' ? 
-                      responseData?.data?.status?.replace('_', ' ') :
-                      responseData?.data?.public_status?.replace('_', ' ')}
+                  <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                    <Clock className="w-4 h-4 mr-2" />
+                    {responseData?.data?.public_status?.replace('_', ' ') || 'SUBMITTED'}
                   </span>
                 </div>
               </div>
 
               {/* Claim Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div className="bg-gray-50 rounded-2xl p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-gray-50 rounded-lg p-6">
                   <div className="flex items-center space-x-3 mb-4">
-                    <IdentificationIcon className="w-6 h-6 text-gray-600" />
+                    <CreditCard className="w-5 h-5 text-gray-600" />
                     <h4 className="font-semibold text-gray-900">Claim Information</h4>
                   </div>
                   <div className="space-y-3">
                     <div>
-                      <p className="text-sm text-gray-600">Claim ID</p>
-                      <p className="font-mono text-sm bg-white px-3 py-2 rounded-lg border">
+                      <p className="text-sm text-gray-600 mb-1">Claim ID</p>
+                      <p className="font-mono text-sm bg-white px-3 py-2 rounded border">
                         {responseData?.data?.id || 'N/A'}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Claim Type</p>
-                      <p className="font-medium">{form.claimType}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Submitted On</p>
-                      <p className="font-medium">{new Date().toLocaleDateString()}</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Claim Type</p>
+                        <p className="font-medium text-gray-900">{form.claimType}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Submitted</p>
+                        <p className="font-medium text-gray-900">{new Date().toLocaleDateString()}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-gray-50 rounded-2xl p-6">
+                <div className="bg-gray-50 rounded-lg p-6">
                   <div className="flex items-center space-x-3 mb-4">
-                    <CurrencyDollarIcon className="w-6 h-6 text-gray-600" />
+                    <DollarSign className="w-5 h-5 text-gray-600" />
                     <h4 className="font-semibold text-gray-900">Financial Details</h4>
                   </div>
                   <div className="space-y-3">
                     <div>
-                      <p className="text-sm text-gray-600">Claim Amount</p>
+                      <p className="text-sm text-gray-600 mb-2">Claim Amount</p>
                       <p className="text-2xl font-bold text-gray-900">
                         ${form.claimAmount ? parseFloat(form.claimAmount).toLocaleString() : '0'}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Date of Incident</p>
-                      <p className="font-medium">{form.dateOfIncident || 'N/A'}</p>
+                      <p className="text-sm text-gray-600 mb-1">Date of Incident</p>
+                      <p className="font-medium text-gray-900 flex items-center space-x-2">
+                        <Calendar className="w-4 h-4 text-gray-500" />
+                        <span>{form.dateOfIncident || 'N/A'}</span>
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Contact Information */}
-              <div className="bg-gray-50 rounded-2xl p-6 mb-8">
+              <div className="bg-gray-50 rounded-lg p-6">
                 <div className="flex items-center space-x-3 mb-4">
-                  <UserIcon className="w-6 h-6 text-gray-600" />
+                  <User className="w-5 h-5 text-gray-600" />
                   <h4 className="font-semibold text-gray-900">Contact Information</h4>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600">Full Name</p>
-                    <p className="font-medium">{form.fullName || 'N/A'}</p>
+                    <p className="text-sm text-gray-600 mb-1">Full Name</p>
+                    <p className="font-medium text-gray-900">{form.fullName || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Email Address</p>
-                    <p className="font-medium break-all">{form.email || 'N/A'}</p>
+                    <p className="text-sm text-gray-600 mb-1">Email Address</p>
+                    <p className="font-medium text-gray-900 break-all">{form.email || 'N/A'}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Fraud Analysis Section - Only visible to agents */}
-              {user?.role === 'agent' && responseData?.fraudAnalysis && (
-                <div className="bg-gray-50 rounded-2xl p-6 mb-8">
-                  <div className="flex items-center space-x-3 mb-6">
-                    <ShieldCheckIcon className="w-6 h-6 text-gray-600" />
-                    <h4 className="font-semibold text-gray-900">Fraud Analysis Results</h4>
+              {/* Next Steps */}
+              <div className="bg-blue-50 rounded-lg p-6">
+                <h4 className="font-semibold text-gray-900 mb-3">What happens next?</h4>
+                <div className="space-y-3">
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mt-0.5">
+                      <span className="text-xs font-bold text-blue-600">1</span>
+                    </div>
+                    <p className="text-sm text-gray-700">Our team will review your claim within 2-3 business days</p>
                   </div>
-                  
-                  <div className="space-y-6">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="text-sm font-medium text-gray-700">Risk Score</p>
-                          <span className="text-sm font-medium text-gray-900">
-                            {responseData.fraudAnalysis.fraudRiskScore}/100
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3">
-                          <div 
-                            className={`h-3 rounded-full transition-all duration-500 ${
-                              responseData.fraudAnalysis.fraudRiskScore <= 30 ? 'bg-green-500' :
-                              responseData.fraudAnalysis.fraudRiskScore <= 70 ? 'bg-yellow-500' :
-                              'bg-red-500'
-                            }`}
-                            style={{ width: `${responseData.fraudAnalysis.fraudRiskScore}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                      <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${
-                        responseData.fraudAnalysis.riskLevel === 'LOW' ? 'bg-green-100 text-green-800' :
-                        responseData.fraudAnalysis.riskLevel === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {responseData.fraudAnalysis.riskLevel} RISK
-                      </span>
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mt-0.5">
+                      <span className="text-xs font-bold text-blue-600">2</span>
                     </div>
-
-                    <div>
-                      <p className="text-sm font-medium text-gray-700 mb-3">Key Findings</p>
-                      <ul className="space-y-2">
-                        {responseData.fraudAnalysis.keyFindings.map((finding: string, index: number) => (
-                          <li key={index} className="flex items-start space-x-3">
-                            <div className="flex-shrink-0 w-2 h-2 bg-gray-400 rounded-full mt-2"></div>
-                            <span className="text-gray-700">{finding}</span>
-                          </li>
-                        ))}
-                      </ul>
+                    <p className="text-sm text-gray-700">You'll receive email updates on your claim status</p>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mt-0.5">
+                      <span className="text-xs font-bold text-blue-600">3</span>
                     </div>
-
-                    <div>
-                      <p className="text-sm font-medium text-gray-700 mb-2">System Recommendation</p>
-                      <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${
-                        responseData.fraudAnalysis.recommendation === 'APPROVE' ? 'bg-green-100 text-green-800' :
-                        responseData.fraudAnalysis.recommendation === 'REJECT' ? 'bg-red-100 text-red-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {responseData.fraudAnalysis.recommendation}
-                      </span>
-                    </div>
+                    <p className="text-sm text-gray-700">If approved, payment will be processed within 5-7 business days</p>
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
-                  onClick={() => router.push('/dashboard')}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  onClick={() => window.location.reload()}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
                 >
-                  Go to Dashboard
+                  <Eye className="w-5 h-5" />
+                  <span>View Dashboard</span>
                 </button>
                 <button
                   onClick={() => {
@@ -643,10 +552,12 @@ export default function SubmitClaimPage() {
                       claimAmount: '',
                       consent: false,
                     });
+                    setCurrentStep(1);
                   }}
-                  className="flex-1 bg-white hover:bg-gray-50 text-gray-700 font-medium py-4 px-6 rounded-xl transition-all duration-200 border-2 border-gray-200 hover:border-gray-300"
+                  className="flex-1 bg-white hover:bg-gray-50 text-gray-700 font-medium py-3 px-6 rounded-lg transition-colors duration-200 border border-gray-300 flex items-center justify-center space-x-2"
                 >
-                  Submit Another Claim
+                  <ClipboardCheck className="w-5 h-5" />
+                  <span>Submit Another Claim</span>
                 </button>
               </div>
             </div>
@@ -656,37 +567,53 @@ export default function SubmitClaimPage() {
     );
   }
 
+  const isStepCompleted = (step: number): boolean => {
+    switch (step) {
+      case 1:
+        return Boolean(form.fullName && form.email && form.phone && form.identityDocs);
+      case 2:
+        return Boolean(form.policyNumber && form.claimType && form.dateOfIncident);
+      case 3:
+        return Boolean(form.incidentLocation && form.incidentDescription);
+      case 4:
+        return Boolean(form.claimAmount);
+      default:
+        return false;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-6">
-            <ClipboardDocumentCheckIcon className="w-8 h-8 text-blue-600" />
+            <ClipboardCheck className="w-8 h-8 text-blue-600" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Submit Your Claim</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Submit Your Insurance Claim</h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Fill out the form below to submit your insurance claim. We'll review it promptly and keep you updated on the progress.
+            Complete the form below to submit your insurance claim. We'll process your request and keep you updated on the progress.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Step 1: Claimant Information */}
+          {/* Step 1: Personal Information */}
           <FormSection 
-            icon={UserIcon} 
-            title="Claimant Information" 
+            icon={User} 
+            title="Personal & Identity Information" 
             step={1}
-            isActive={true}
+            isActive={currentStep === 1}
+            isCompleted={isStepCompleted(1)}
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <InputField
-                label="Full Name"
+                label="Full Legal Name"
                 name="fullName"
                 value={form.fullName}
                 onChange={handleChange}
                 required
-                placeholder="Enter your full name"
-                icon={UserIcon}
+                placeholder="Enter your complete full name"
+                icon={User}
               />
               <InputField
                 label="Email Address"
@@ -696,52 +623,54 @@ export default function SubmitClaimPage() {
                 onChange={handleChange}
                 required
                 placeholder="Enter your email address"
-                icon={EnvelopeIcon}
+                icon={Mail}
               />
             </div>
             <InputField
-              label="Phone Number"
+              label="Contact Phone Number"
               name="phone"
               value={form.phone}
               onChange={handleChange}
               required
-              placeholder="Enter your contact number"
-              icon={PhoneIcon}
+              placeholder="Enter your primary contact number"
+              icon={Phone}
             />
             <FileUpload
               name="identityDocs"
               onChange={handleChange}
               accept="image/*,application/pdf"
-              label="Upload Identity Documents"
-              description="Accepted: citizenship, passport, NID, VoterID"
+              label="Identity Verification Documents"
+              description="Upload citizenship certificate, passport, national ID, voter ID, or driver's license"
               file={form.identityDocs}
             />
           </FormSection>
 
           {/* Step 2: Policy Information */}
           <FormSection 
-            icon={DocumentTextIcon} 
-            title="Policy Information" 
+            icon={FileText} 
+            title="Insurance Policy Details" 
             step={2}
+            isActive={currentStep === 2}
+            isCompleted={isStepCompleted(2)}
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <InputField
-                label="Policy Number"
+                label="Insurance Policy Number"
                 name="policyNumber"
                 value={form.policyNumber}
                 onChange={handleChange}
                 required
                 placeholder="Enter your policy number"
-                icon={IdentificationIcon}
+                icon={CreditCard}
               />
               <SelectField
-                label="Claim Type"
+                label="Type of Claim"
                 name="claimType"
                 value={form.claimType}
                 onChange={handleChange}
                 required
                 options={claimTypeOptions}
-                placeholder="Select claim type"
+                placeholder="Select the type of claim"
               />
             </div>
             <InputField
@@ -751,49 +680,51 @@ export default function SubmitClaimPage() {
               value={form.dateOfIncident}
               onChange={handleChange}
               required
-              icon={CalendarDaysIcon}
+              icon={Calendar}
             />
           </FormSection>
 
           {/* Step 3: Incident Details */}
           <FormSection 
-            icon={ExclamationTriangleIcon} 
-            title="Incident Details" 
+            icon={AlertTriangle} 
+            title="Incident Details & Documentation" 
             step={3}
+            isActive={currentStep === 3}
+            isCompleted={isStepCompleted(3)}
           >
             <InputField
-              label="Location of Incident"
+              label="Location Where Incident Occurred"
               name="incidentLocation"
               value={form.incidentLocation}
               onChange={handleChange}
               required
-              placeholder="Enter the location where the incident occurred"
-              icon={MapPinIcon}
+              placeholder="Provide the specific location of the incident"
+              icon={MapPin}
             />
             <TextAreaField
-              label="Description of Incident"
+              label="Detailed Description of Incident"
               name="incidentDescription"
               value={form.incidentDescription}
               onChange={handleChange}
               required
-              placeholder="Briefly describe what happened"
+              placeholder="Provide a comprehensive description of what happened, including timeline and circumstances"
               rows={4}
             />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <FileUpload
                 name="supportingDocs"
                 onChange={handleChange}
                 accept="image/*,application/pdf"
-                label="Supporting Documents"
-                description="Photos, police reports, etc."
+                label="Supporting Evidence"
+                description="Photos of damage, police reports, witness statements, medical reports"
                 file={form.supportingDocs}
               />
               <FileUpload
                 name="invoices"
                 onChange={handleChange}
                 accept="image/*,application/pdf"
-                label="Claim Invoices"
-                description="Bills, receipts, estimates, etc."
+                label="Financial Documentation"
+                description="Bills, receipts, repair estimates, medical invoices"
                 file={form.invoices}
               />
             </div>
@@ -801,26 +732,28 @@ export default function SubmitClaimPage() {
 
           {/* Step 4: Claim Amount */}
           <FormSection 
-            icon={CurrencyDollarIcon} 
-            title="Claim Amount" 
+            icon={DollarSign} 
+            title="Financial Claim Details" 
             step={4}
+            isActive={currentStep === 4}
+            isCompleted={isStepCompleted(4)}
           >
             <InputField
-              label="Estimated Claim Amount"
+              label="Total Estimated Claim Amount"
               name="claimAmount"
               type="number"
               value={form.claimAmount}
               onChange={handleChange}
               required
-              placeholder="Enter the estimated amount you're claiming"
+              placeholder="Enter the total amount you're claiming"
               min="0"
               step="0.01"
-              icon={CurrencyDollarIcon}
+              icon={DollarSign}
             />
           </FormSection>
 
-          {/* Step 5: Consent and Submission */}
-          <div className="bg-white rounded-2xl shadow-sm border p-6">
+          {/* Consent and Submission */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
             <div className="flex items-start space-x-3">
               <input
                 type="checkbox"
@@ -832,10 +765,11 @@ export default function SubmitClaimPage() {
               />
               <div className="flex-1">
                 <label className="text-sm font-medium text-gray-900">
-                  I certify that the information provided is true and accurate.
+                  I certify that all information provided is true, accurate, and complete.
                 </label>
                 <p className="text-xs text-gray-500 mt-1">
-                  By checking this box, you confirm that all information provided is truthful and accurate to the best of your knowledge.
+                  By checking this box, you confirm that all information provided is truthful and accurate to the best of your knowledge. 
+                  Providing false information may result in claim denial and potential legal consequences.
                 </p>
               </div>
             </div>
@@ -843,10 +777,13 @@ export default function SubmitClaimPage() {
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <div className="flex items-center space-x-3">
-                <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
-                <p className="text-red-700 font-medium">{error}</p>
+                <AlertTriangle className="w-5 h-5 text-red-500" />
+                <div>
+                  <h4 className="text-sm font-medium text-red-900">Submission Error</h4>
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
               </div>
             </div>
           )}
@@ -855,31 +792,34 @@ export default function SubmitClaimPage() {
           <div className="flex flex-col sm:flex-row gap-4">
             <button
               type="submit"
-              disabled={submitting}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 shadow-lg hover:shadow-xl disabled:shadow-md flex items-center justify-center space-x-2"
+              disabled={submitting || !form.consent}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-4 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
             >
               {submitting ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>Submitting...</span>
+                  <span>Processing Your Claim...</span>
                 </>
               ) : (
                 <>
-                  <CheckCircleIcon className="w-5 h-5" />
-                  <span>Submit Claim</span>
+                  <CheckCircle className="w-5 h-5" />
+                  <span>Submit Insurance Claim</span>
                 </>
               )}
             </button>
             <button
               type="button"
-              onClick={() => router.back()}
-              className="bg-white hover:bg-gray-50 text-gray-700 font-medium py-4 px-6 rounded-xl transition-all duration-200 border-2 border-gray-200 hover:border-gray-300"
+              onClick={() => window.history.back()}
+              className="bg-white hover:bg-gray-50 text-gray-700 font-medium py-4 px-6 rounded-lg transition-colors duration-200 border border-gray-300 flex items-center justify-center space-x-2"
             >
-              Go Back
+              <ArrowLeft className="w-5 h-5" />
+              <span>Go Back</span>
             </button>
           </div>
         </form>
       </div>
     </div>
-  )
+  );
 }
+
+export default App;

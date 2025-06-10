@@ -3,6 +3,7 @@ import { UserCircle, LogOut, FileText, CreditCard, BarChart2, HelpCircle, User, 
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
+import ProfileDisplay from "@/components/ProfileDisplay"
 
 interface Claim {
   claim_id: string;
@@ -298,8 +299,8 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Description</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Location</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
-                </tr>
-              </thead>
+            </tr>
+          </thead>
               <tbody className="divide-y divide-gray-50">
                 {filteredClaims.map((claim, idx) => (
                   <tr key={idx} className="group hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/50 transition-all duration-200">
@@ -358,11 +359,11 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                         <Eye className="w-4 h-4 mr-1 group-hover:scale-110 transition-transform duration-200" />
                         View
                       </button>
-                    </td>
+                  </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+            ))}
+          </tbody>
+        </table>
           </div>
         </div>
       </div>
@@ -411,10 +412,10 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                       {col}
                     </th>
                   ))}
-                </tr>
-              </thead>
+            </tr>
+          </thead>
               <tbody className="divide-y divide-gray-50">
-                {claims.map((claim, idx) => (
+            {claims.map((claim, idx) => (
                   <tr key={idx} className="group hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/50 transition-all duration-200">
                     <td className="px-6 py-4">
                       <span className="font-mono text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">
@@ -431,7 +432,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                         <Calendar className="w-4 h-4 mr-2 text-gray-400" />
                         {new Date(claim.created_at).toLocaleDateString()}
                       </div>
-                    </td>
+                </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         <DollarSign className="w-4 h-4 text-emerald-500 mr-1" />
@@ -439,12 +440,12 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                           {claim.claim_amount.toLocaleString()}
                         </span>
                       </div>
-                    </td>
+                </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ${getStatusBadgeClasses(claim.public_status)}`}>
                         {claim.public_status.replace("_", " ")}
-                      </span>
-                    </td>
+                  </span>
+                </td>
                     <td className="px-6 py-4">
                       {claim.risk_level && (
                         <span className={`inline-flex items-center px-3 py-1 text-xs font-bold rounded-full ${getRiskLevelClasses(claim.risk_level)}`}>
@@ -458,12 +459,12 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                         <Eye className="w-4 h-4 mr-1 group-hover:scale-110 transition-transform duration-200" />
                         View
                       </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
         </div>
       </div>
     );
@@ -499,9 +500,9 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
           {/* Navigation */}
           <nav className="space-y-2">
             {["policies", "claims", "payments", "status", "about", "help"].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
                 className={`w-full group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 ${
                   activeTab === tab
                     ? "bg-white text-blue-900 shadow-xl shadow-blue-900/20 font-semibold transform translate-x-1"
@@ -518,10 +519,10 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                 <span className="capitalize font-medium">
                   {tab.replace("_", " ")}
                 </span>
-              </button>
-            ))}
-          </nav>
-        </div>
+            </button>
+          ))}
+        </nav>
+          </div>
 
         {/* Sign out button */}
         <div className="relative z-10 mt-auto p-6 border-t border-white/10">
@@ -550,7 +551,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                 <h2 className="text-3xl font-bold text-gray-900 capitalize">
                   {activeTab.replace("_", " ")}
                 </h2>
-              </div>
+        </div>
               <p className="text-gray-600 text-lg">
                 {activeTab === "claims" && "Manage and track your insurance claims with real-time updates"}
                 {activeTab === "policies" && "View and manage your active insurance policies"}
@@ -587,7 +588,8 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
             <div className="space-y-6">
               {activeTab === "claims" && renderClaimsTable(dataToRender)}
               {activeTab === "status" && renderStatusTable(dataToRender)}
-              {activeTab !== "claims" && activeTab !== "status" && (
+              {activeTab === "about" && <ProfileDisplay />}
+              {activeTab !== "claims" && activeTab !== "status" && activeTab !== "about" && (
                 <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
                   <div className="max-w-sm mx-auto">
                     <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">

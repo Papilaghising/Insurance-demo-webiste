@@ -62,4 +62,4 @@ $$ language 'plpgsql';
 CREATE TRIGGER update_claim_files_updated_at
   BEFORE UPDATE ON claim_files
   FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column(); 
+  EXECUTE FUNCTION update_updated_at_column();

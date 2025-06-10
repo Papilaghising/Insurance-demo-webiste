@@ -27,4 +27,4 @@ CREATE POLICY "Agents can update claim status and fraud analysis"
       WHERE p.user_id = auth.uid() 
       AND p.role = 'agent'
     )
-  ); 
+  );

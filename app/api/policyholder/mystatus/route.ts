@@ -115,4 +115,4 @@ export async function GET(req: NextRequest) {
     console.error('API Error:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-} 
+}
