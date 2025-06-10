@@ -1,21 +1,11 @@
 import "@/app/globals.css"
+import { Inter, Montserrat } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/contexts/auth-context"
-import { Toaster } from "sonner"
 import type { ReactNode } from "react"
-import { Inter, Montserrat } from 'next/font/google'
 
-const inter = Inter({ 
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-})
-
-const montserrat = Montserrat({
-  subsets: ['latin'],
-  variable: '--font-montserrat',
-  display: 'swap',
-})
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
+const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" })
 
 export const metadata = {
   title: "TrueClaim | Transforming Insurance Claims with AI",
@@ -30,13 +20,10 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en" suppressHydrationWarning className={`scroll-smooth ${inter.variable} ${montserrat.variable}`}>
-      <body className="font-sans antialiased bg-background" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="scroll-smooth">
+      <body className={`font-sans ${inter.variable} ${montserrat.variable}`} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="light">
-          <AuthProvider>
-            {children}
-            <Toaster richColors position="top-center" />
-          </AuthProvider>
+          <AuthProvider>{children}</AuthProvider>
         </ThemeProvider>
       </body>
     </html>

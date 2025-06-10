@@ -309,7 +309,7 @@ export default function AgentDashboard({ user }: { user: User }) {
                       View Policies
                     </button>
                   </div>
-                  </td>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -356,7 +356,7 @@ export default function AgentDashboard({ user }: { user: User }) {
 
         <nav className="flex-1 space-y-2">
           {tabButtons.map(({ key, label, icon }) => (
-          <button
+            <button
               key={key}
               onClick={() => setActiveTab(key)}
               className={`flex items-center w-full px-4 py-3 rounded-lg transition-colors ${
@@ -367,7 +367,7 @@ export default function AgentDashboard({ user }: { user: User }) {
             >
               <span className="mr-3">{icon}</span>
               {label}
-          </button>
+            </button>
           ))}
         </nav>
 
@@ -428,7 +428,7 @@ export default function AgentDashboard({ user }: { user: User }) {
                 <p className="text-sm text-gray-600 mt-2">
                   Claims awaiting review
                 </p>
-        </div>
+              </div>
 
               {/* Total Claims Amount Card */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -446,9 +446,9 @@ export default function AgentDashboard({ user }: { user: User }) {
                 <p className="text-sm text-gray-600 mt-2">
                   Total value of all claims
                 </p>
+              </div>
+            </div>
           </div>
-          </div>
-        </div>
 
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -457,12 +457,12 @@ export default function AgentDashboard({ user }: { user: User }) {
                  activeTab === "policyholders" ? "Active Policyholders" :
                  "Active Policies"}
               </h3>
-            <button
-              onClick={() => fetchData(activeTab)}
+              <button
+                onClick={() => fetchData(activeTab)}
                 className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
+              >
                 Refresh
-            </button>
+              </button>
             </div>
 
             {error && (

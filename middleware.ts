@@ -1,50 +1,49 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { getSupabase } from '@/lib/supabase'
 
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
+export async function middleware(request: NextRequest) {
+  // Check if the request is for a public path
+  const publicPaths = ['/login', '/signup', '/', '/about', '/contact', '/services']
+  const isPublicPath = publicPaths.some(path => request.nextUrl.pathname.startsWith(path))
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
-  // Allow access to auth-related routes
-  if (req.nextUrl.pathname.startsWith('/api/auth/')) {
-    return res
+  // If it's a public path, allow the request
+  if (isPublicPath) {
+    return NextResponse.next()
   }
 
-  // If there's no session and the user is trying to access protected routes
-  if (!session && (
-    req.nextUrl.pathname.startsWith('/dashboard') ||
-    req.nextUrl.pathname.startsWith('/api/policyholder')
-  )) {
-    const redirectUrl = new URL('/login', req.url)
-    return NextResponse.redirect(redirectUrl)
+  // Check for session cookie
+  const sessionCookie = request.cookies.get('sb-session')
+  if (!sessionCookie?.value) {
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // If there's a session and the user is trying to access auth pages
-  if (session && (
-    req.nextUrl.pathname === '/login' ||
-    req.nextUrl.pathname === '/signup'
-  )) {
-    const redirectUrl = new URL('/dashboard', req.url)
-    return NextResponse.redirect(redirectUrl)
-  }
+  try {
+    // Parse the session cookie
+    const session = JSON.parse(sessionCookie.value)
+    
+    // If session exists but has expired, redirect to login
+    if (session.expires_at && new Date(session.expires_at * 1000) < new Date()) {
+      const response = NextResponse.redirect(new URL('/login', request.url))
+      response.cookies.delete('sb-session')
+      return response
+    }
 
-  return res
+    // Continue with the valid session
+    return NextResponse.next()
+  } catch (error) {
+    // If there's an error parsing the session, clear it and redirect to login
+    const response = NextResponse.redirect(new URL('/login', request.url))
+    response.cookies.delete('sb-session')
+    return response
+  }
 }
 
+// Configure which paths the middleware runs on
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public (public files)
-     */
-    '/((?!_next/static|_next/image|favicon.ico|public|fonts).*)',
+    '/dashboard/:path*',
+    '/api/:path*',
+    '/((?!_next/static|_next/image|favicon.ico|logo.png|images).*)',
   ],
 }
