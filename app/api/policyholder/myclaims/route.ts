@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'No token provided' }, { status: 401 })
     }
 
-    // Get the user from the session
+    // Get the user from the sessions
     const { data: { user }, error: userError } = await supabase.auth.getUser(token)
     
     if (userError || !user || !user.email) {
