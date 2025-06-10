@@ -362,13 +362,13 @@ export default function SubmitClaimPage() {
         credentials: 'same-origin'
       })
 
+      const responseData = await uploadRes.json()
+      
       if (!uploadRes.ok) {
-        const errorData = await uploadRes.json()
-        console.error('Upload failed:', errorData)
-        throw new Error(errorData.details || errorData.error || 'Failed to upload files')
+        console.error('Upload failed:', responseData)
+        throw new Error(responseData.details || responseData.error || 'Failed to upload files')
       }
 
-      const responseData = await uploadRes.json()
       return responseData
     } catch (error: any) {
       console.error('Upload error:', error)
@@ -383,41 +383,23 @@ export default function SubmitClaimPage() {
     setSuccess(false)
 
     try {
-      // First upload files if any exist
-      let fileUrls = null
-      if (form.supportingDocs || form.identityDocs || form.invoices) {
-        try {
-          const uploadResult = await uploadFiles('temp') // We'll update this with actual claim ID later
-          if (uploadResult && uploadResult.urls) {
-            fileUrls = uploadResult.urls
-          }
-        } catch (uploadError: any) {
-          console.error('File upload error:', uploadError)
-          throw new Error(uploadError.message || 'Failed to upload files')
-        }
-      }
-
-      // Then submit claim data with file URLs if available
-      const claimData = {
-        fullName: form.fullName,
-        email: form.email,
-        phone: form.phone,
-        policyNumber: form.policyNumber,
-        claimType: form.claimType,
-        dateOfIncident: form.dateOfIncident,
-        incidentLocation: form.incidentLocation,
-        incidentDescription: form.incidentDescription,
-        claimAmount: form.claimAmount.toString(),
-        consent: form.consent.toString(),
-        fileUrls // Include file URLs in claim data
-      }
-
       const res = await fetch('/api/claims/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(claimData)
+        body: JSON.stringify({
+          fullName: form.fullName,
+          email: form.email,
+          phone: form.phone,
+          policyNumber: form.policyNumber,
+          claimType: form.claimType,
+          dateOfIncident: form.dateOfIncident,
+          incidentLocation: form.incidentLocation,
+          incidentDescription: form.incidentDescription,
+          claimAmount: form.claimAmount.toString(),
+          consent: form.consent.toString()
+        })
       })
 
       const jsonResponse = await res.json()
@@ -429,6 +411,16 @@ export default function SubmitClaimPage() {
 
       setResponseData(jsonResponse)
       setSuccess(true)
+
+      if (form.supportingDocs || form.identityDocs || form.invoices) {
+        try {
+          const uploadResult = await uploadFiles(jsonResponse.data.id)
+          console.log('Upload result:', uploadResult)
+        } catch (uploadError: any) {
+          console.error('File upload error:', uploadError)
+          throw new Error(uploadError.message || 'Failed to upload files')
+        }
+      }
     } catch (err: any) {
       console.error('Form submission error:', err)
       setError(err.message || 'Error submitting form')
