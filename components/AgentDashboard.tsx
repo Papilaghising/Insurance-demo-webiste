@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from "react"
-import { UserCircle, LogOut, Users, FileText, ShieldCheck, AlertTriangle, CheckCircle, Clock } from "lucide-react"
+import { UserCircle, LogOut, Users, FileText, ShieldCheck, AlertTriangle, CheckCircle, Clock, Info } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
 import { getSupabase } from "@/lib/supabase"
@@ -19,10 +19,25 @@ interface Claim {
   public_status: string;
   fraud_risk_score?: number;
   risk_level?: 'LOW' | 'MEDIUM' | 'HIGH';
-  key_findings?: string[];
+  key_findings?: string | string[];
   full_name: string;
   email: string;
+  recommendation?: 'APPROVE' | 'REJECT' | 'REVIEW';
 }
+
+// Add this helper function after the interface declarations
+const parseKeyFindings = (findings: string | string[] | undefined): string[] => {
+  if (!findings) return [];
+  if (Array.isArray(findings)) return findings;
+  try {
+    // Try parsing if it's a JSON string
+    const parsed = JSON.parse(findings);
+    return Array.isArray(parsed) ? parsed : [findings];
+  } catch {
+    // If it's a plain string, split by newlines or commas
+    return findings.split(/[,\n]/).map(f => f.trim()).filter(f => f.length > 0);
+  }
+};
 
 // Helper function for consistent date formatting
 const formatDate = (dateString: string) => {
@@ -127,6 +142,15 @@ export default function AgentDashboard({ user }: { user: User }) {
     return level ? styles[level] || "bg-gray-100 text-gray-800" : "bg-gray-100 text-gray-800"
   }
 
+  const getRecommendationBadgeClasses = (recommendation?: string): string => {
+    const styles: Record<string, string> = {
+      APPROVE: "bg-green-100 text-green-800",
+      REJECT: "bg-red-100 text-red-800",
+      REVIEW: "bg-yellow-100 text-yellow-800"
+    }
+    return recommendation ? styles[recommendation] || "bg-gray-100 text-gray-800" : "bg-gray-100 text-gray-800"
+  }
+
   const renderClaimsTable = (claims: Claim[]) => {
     if (!claims.length) return <p className="text-gray-500 italic">No claims found.</p>
 
@@ -184,6 +208,8 @@ export default function AgentDashboard({ user }: { user: User }) {
                 <th className="px-4 py-3 text-left font-semibold text-gray-900">Amount</th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-900">Status</th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-900">Risk Level</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-900">Recommendation</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-900">Key Findings</th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-900">Submitted</th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-900">Actions</th>
               </tr>
@@ -215,6 +241,36 @@ export default function AgentDashboard({ user }: { user: User }) {
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRiskLevelBadgeClasses(claim.risk_level)}`}>
                       {claim.risk_level || 'N/A'}
                     </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRecommendationBadgeClasses(claim.recommendation)}`}>
+                      {claim.recommendation || 'PENDING'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {(() => {
+                      const findings = parseKeyFindings(claim.key_findings);
+                      return findings.length > 0 ? (
+                        <div className="relative group">
+                          <button className="p-1 hover:bg-gray-100 rounded-full">
+                            <Info className="w-5 h-5 text-gray-500" />
+                          </button>
+                          <div className="hidden group-hover:block absolute z-10 w-72 p-4 bg-white rounded-lg shadow-lg border border-gray-200 left-0 top-full mt-1">
+                            <h4 className="font-medium text-gray-900 mb-2">Key Findings</h4>
+                            <ul className="space-y-1">
+                              {findings.map((finding, idx) => (
+                                <li key={idx} className="text-sm text-gray-600 flex items-start gap-2">
+                                  <span className="w-2 h-2 bg-gray-400 rounded-full flex-shrink-0 mt-1.5"></span>
+                                  <span>{finding}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-sm">No findings</span>
+                      );
+                    })()}
                   </td>
                   <td className="px-4 py-3 text-gray-500 text-sm">
                     {mounted ? formatDate(claim.created_at) : ''}
@@ -281,7 +337,7 @@ export default function AgentDashboard({ user }: { user: User }) {
                   <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                     {policyholder.policy_count || 0} policies
                   </span>
-                </td>
+                </td>y
                 <td className="px-4 py-3">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                     policyholder.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :

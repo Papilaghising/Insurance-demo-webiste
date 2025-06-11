@@ -56,7 +56,8 @@ export async function GET(req: NextRequest) {
         public_status,
         fraud_risk_score,
         risk_level,
-        key_findings
+        key_findings,
+        recommendation 
       `)
       .order('created_at', { ascending: false })
 

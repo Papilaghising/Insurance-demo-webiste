@@ -15,6 +15,7 @@ interface Claim {
   created_at: string;
   incident_location?: string;
   risk_level?: string;
+  recommendation?: 'APPROVE' | 'REJECT' | 'REVIEW';
 }
 
 interface StatusSummary {
@@ -126,6 +127,15 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
       LOW: "bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25",
     };
     return styles[level] || "bg-gradient-to-r from-gray-500 to-slate-500 text-white";
+  };
+
+  const getRecommendationBadgeClasses = (recommendation?: string): string => {
+    const styles: Record<string, string> = {
+      APPROVE: "bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 border border-emerald-200",
+      REJECT: "bg-gradient-to-r from-red-50 to-rose-50 text-red-700 border border-red-200",
+      REVIEW: "bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border border-amber-200",
+    };
+    return styles[recommendation?.toUpperCase() || ''] || "bg-gradient-to-r from-gray-50 to-slate-50 text-gray-700 border border-gray-200";
   };
 
   const getTabIcon = (tab: string) => {
@@ -296,11 +306,12 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Result</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Description</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Location</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
-            </tr>
-          </thead>
+                </tr>
+              </thead>
               <tbody className="divide-y divide-gray-50">
                 {filteredClaims.map((claim, idx) => (
                   <tr key={idx} className="group hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/50 transition-all duration-200">
@@ -340,6 +351,11 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                       </span>
                     </td>
                     <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ${getRecommendationBadgeClasses(claim.recommendation)}`}>
+                        {claim.recommendation || 'PENDING'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
                       <div className="max-w-xs">
                         <p className="text-sm text-gray-600 line-clamp-2" title={claim.incident_description}>
                           {claim.incident_description}
@@ -359,11 +375,11 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                         <Eye className="w-4 h-4 mr-1 group-hover:scale-110 transition-transform duration-200" />
                         View
                       </button>
-                  </td>
+                    </td>
                   </tr>
-            ))}
-          </tbody>
-        </table>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -407,15 +423,15 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
             <table className="min-w-full divide-y divide-gray-100">
               <thead>
                 <tr className="bg-gradient-to-r from-slate-50 to-gray-50">
-                  {["Claim ID", "Type", "Submitted Date", "Amount", "Status", "Risk Level", "Action"].map((col) => (
+                  {["Claim ID", "Type", "Submitted Date", "Amount", "Status", "Result", "Risk Level", "Action"].map((col) => (
                     <th key={col} className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       {col}
                     </th>
                   ))}
-            </tr>
-          </thead>
+                </tr>
+              </thead>
               <tbody className="divide-y divide-gray-50">
-            {claims.map((claim, idx) => (
+                {claims.map((claim, idx) => (
                   <tr key={idx} className="group hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/50 transition-all duration-200">
                     <td className="px-6 py-4">
                       <span className="font-mono text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">
@@ -432,7 +448,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                         <Calendar className="w-4 h-4 mr-2 text-gray-400" />
                         {new Date(claim.created_at).toLocaleDateString()}
                       </div>
-                </td>
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         <DollarSign className="w-4 h-4 text-emerald-500 mr-1" />
@@ -440,12 +456,17 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                           {claim.claim_amount.toLocaleString()}
                         </span>
                       </div>
-                </td>
+                    </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ${getStatusBadgeClasses(claim.public_status)}`}>
                         {claim.public_status.replace("_", " ")}
-                  </span>
-                </td>
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ${getRecommendationBadgeClasses(claim.recommendation)}`}>
+                        {claim.recommendation || 'PENDING'}
+                      </span>
+                    </td>
                     <td className="px-6 py-4">
                       {claim.risk_level && (
                         <span className={`inline-flex items-center px-3 py-1 text-xs font-bold rounded-full ${getRiskLevelClasses(claim.risk_level)}`}>
@@ -459,12 +480,12 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                         <Eye className="w-4 h-4 mr-1 group-hover:scale-110 transition-transform duration-200" />
                         View
                       </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     );

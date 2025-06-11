@@ -11,6 +11,7 @@ interface Claim {
   fraud_risk_score?: number;
   risk_level?: string;
   key_findings?: string[];
+  recommendation?: string;
 }
 
 interface ClaimStatusDetails {
@@ -74,7 +75,8 @@ export async function GET(req: NextRequest) {
         public_status,
         fraud_risk_score,
         risk_level,
-        key_findings
+        key_findings,
+        recommendation
       `)
       .eq('email', user.email)
       .order('created_at', { ascending: false })
@@ -104,7 +106,8 @@ export async function GET(req: NextRequest) {
             findings: claim.key_findings || []
           } : null,
           submitted_date: new Date(claim.created_at).toISOString(),
-          incident_date: claim.date_of_incident
+          incident_date: claim.date_of_incident,
+          recommendation: claim.recommendation
         }
       }))
     }
