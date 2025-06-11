@@ -16,4 +16,4 @@ CREATE POLICY "Users can view their own claim files"
       WHERE p.user_id = auth.uid() 
       AND p.role = 'agent'
     )
-  ); 
+  );

@@ -14,4 +14,4 @@ ALTER POLICY "Users can update their own claims"
 
 -- Grant necessary permissions
 GRANT ALL ON claims TO authenticated;
-GRANT USAGE ON SEQUENCE claims_id_seq TO authenticated; 
+GRANT USAGE ON SEQUENCE claims_id_seq TO authenticated;
