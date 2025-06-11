@@ -358,17 +358,16 @@ export default function SubmitClaimPage() {
         body: formData,
         headers: {
           'Authorization': `Bearer ${session.access_token}`
-        },
-        credentials: 'same-origin'
+        }
       })
 
-      const responseData = await uploadRes.json()
-      
       if (!uploadRes.ok) {
-        console.error('Upload failed:', responseData)
-        throw new Error(responseData.details || responseData.error || 'Failed to upload files')
+        const errorData = await uploadRes.json()
+        console.error('Upload failed:', errorData)
+        throw new Error(errorData.details || errorData.error || 'Failed to upload files')
       }
 
+      const responseData = await uploadRes.json()
       return responseData
     } catch (error: any) {
       console.error('Upload error:', error)
@@ -414,7 +413,7 @@ export default function SubmitClaimPage() {
 
       if (form.supportingDocs || form.identityDocs || form.invoices) {
         try {
-          const uploadResult = await uploadFiles(jsonResponse.data.id)
+          const uploadResult = await uploadFiles(jsonResponse.data.claim_id)
           console.log('Upload result:', uploadResult)
         } catch (uploadError: any) {
           console.error('File upload error:', uploadError)

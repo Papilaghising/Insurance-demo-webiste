@@ -2,6 +2,24 @@ import { NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
 import { cookies } from 'next/headers'
 
+interface FileMetadata {
+  originalName: string;
+  storedName: string;
+  size: number;
+  type: string;
+  url: string;
+}
+
+interface UploadResults {
+  identity_files: FileMetadata | null;
+  supporting_files: FileMetadata | null;
+  invoice_files: FileMetadata | null;
+}
+
+interface FileTypes {
+  [key: string]: keyof UploadResults;
+}
+
 // Configure the API route to handle large files
 export const config = {
   api: {
@@ -12,19 +30,24 @@ export const config = {
 
 export async function POST(request: Request) {
   try {
+    // Get the authorization header
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader) {
+      console.error('No authorization header')
+      return NextResponse.json({ error: 'No authorization header' }, { status: 401 })
+    }
+
+    const token = authHeader.replace('Bearer ', '')
     const supabase = getSupabase()
+
+    // Get the user session using the token
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token)
     
-    // Get cookies using the new cookies() API
-    const cookieStore = await cookies()
-    const accessToken = cookieStore.get('sb-access-token')?.value
-    
-    // Get the session using the Supabase client
-    const { data: { session }, error: authError } = await supabase.auth.getSession()
-    
-    if (authError || !session) {
+    if (userError || !user) {
+      console.error('Auth error:', userError)
       return NextResponse.json({ 
         error: 'Unauthorized', 
-        details: authError?.message || 'No session found'
+        details: userError?.message || 'Invalid token'
       }, { status: 401 })
     }
 
@@ -63,62 +86,81 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Claim ID is required' }, { status: 400 })
     }
 
-    const uploadResults = []
-    const uploadedUrls = {}
+    const uploadResults: UploadResults = {
+      identity_files: null,
+      supporting_files: null,
+      invoice_files: null
+    }
 
     // Process each file type
-    const fileTypes = ['identityDocs', 'supportingDocs', 'invoices']
+    const fileTypes: FileTypes = {
+      'identityDocs': 'identity_files',
+      'supportingDocs': 'supporting_files',
+      'invoices': 'invoice_files'
+    }
     
-    for (const fileType of fileTypes) {
-      const file = formData.get(fileType) as File
-      if (file) {
-        const fileExt = file.name.split('.').pop()
-        const fileName = `${claimId}/${fileType}_${Date.now()}.${fileExt}`
+    for (const [formKey, dbColumn] of Object.entries(fileTypes)) {
+      const file = formData.get(formKey) as File | null
+      if (file && file instanceof File) {
+        try {
+          // Create a unique filename
+          const fileExt = file.name.split('.').pop()
+          const fileName = `${claimId}/${formKey}_${Date.now()}.${fileExt}`
 
-        // Convert File to ArrayBuffer
-        const arrayBuffer = await file.arrayBuffer()
-        const fileBuffer = new Uint8Array(arrayBuffer)
+          // Convert File to ArrayBuffer
+          const arrayBuffer = await file.arrayBuffer()
+          const fileBuffer = new Uint8Array(arrayBuffer)
 
-        // Upload to Supabase storage
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('trueclaim')
-          .upload(fileName, fileBuffer, {
-            contentType: file.type,
-            upsert: true
+          console.log(`Uploading ${formKey}:`, {
+            fileName,
+            fileSize: file.size,
+            fileType: file.type
           })
 
-        if (uploadError) {
-          console.error(`Error uploading ${fileType}:`, uploadError)
+          // Upload to Supabase storage with the session
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('trueclaim')
+            .upload(fileName, fileBuffer, {
+              contentType: file.type,
+              upsert: true
+            })
+
+          if (uploadError) {
+            console.error(`Error uploading ${formKey}:`, uploadError)
+            throw uploadError
+          }
+
+          console.log(`Successfully uploaded ${formKey}:`, uploadData)
+
+          // Get the public URL
+          const { data: { publicUrl } } = supabase.storage
+            .from('trueclaim')
+            .getPublicUrl(fileName)
+
+          uploadResults[dbColumn] = {
+            originalName: file.name,
+            storedName: fileName,
+            size: file.size,
+            type: file.type,
+            url: publicUrl
+          }
+        } catch (error) {
+          console.error(`Error processing ${formKey}:`, error)
           return NextResponse.json({
-            error: `Failed to upload ${fileType}`,
-            details: uploadError
+            error: `Failed to process ${formKey}`,
+            details: error
           }, { status: 500 })
         }
-
-        // Get the public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('trueclaim')
-          .getPublicUrl(fileName)
-
-        uploadResults.push({
-          fileType,
-          originalName: file.name,
-          storedName: fileName,
-          size: file.size,
-          type: file.type,
-          url: publicUrl
-        })
-
-        uploadedUrls[fileType] = publicUrl
       }
     }
 
     // Update the claim record with file URLs if any files were uploaded
-    if (uploadResults.length > 0) {
+    if (Object.values(uploadResults).some(result => result !== null)) {
+      console.log('Updating claim with file URLs:', uploadResults)
       const { error: updateError } = await supabase
         .from('claims')
-        .update({ file_urls: uploadedUrls })
-        .eq('id', claimId)
+        .update(uploadResults as unknown as Record<string, unknown>)
+        .eq('claim_id', claimId)
 
       if (updateError) {
         console.error('Error updating claim with file URLs:', updateError)
@@ -131,8 +173,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       message: 'Files uploaded successfully',
-      files: uploadResults,
-      urls: uploadedUrls
+      files: uploadResults
     })
 
   } catch (error: any) {
