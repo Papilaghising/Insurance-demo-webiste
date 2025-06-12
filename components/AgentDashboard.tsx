@@ -296,8 +296,8 @@ export default function AgentDashboard({ user }: { user: User }) {
     if (!data.length) return (
       <div className="text-center py-12">
         <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-        <p className="text-gray-500 text-lg">No policyholders found</p>
-        <p className="text-gray-400 text-sm">Policyholders will appear here once they are added to the system.</p>
+        <p className="text-gray-500 text-lg">No policies found</p>
+        <p className="text-gray-400 text-sm">Policies will appear here once they are added to the system.</p>
       </div>
     )
 

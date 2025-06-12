@@ -176,7 +176,6 @@ export default function ProfileDisplay() {
         {!isEditing ? (
           <Button
             onClick={() => setIsEditing(true)}
-            variant="outline"
             className="flex items-center gap-2"
           >
             <Edit2 className="w-4 h-4" />
@@ -186,7 +185,6 @@ export default function ProfileDisplay() {
           <div className="flex items-center gap-2">
             <Button
               onClick={handleCancel}
-              variant="outline"
               className="flex items-center gap-2"
               disabled={saving}
             >

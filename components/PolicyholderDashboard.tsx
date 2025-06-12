@@ -58,12 +58,12 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
       setError(null);
 
       const endpoints: Record<string, string> = {
-        policies: "/api/policyholder/mypolicies",
+        policies: "/api/policyholder/policies",
         claims: "/api/policyholder/myclaims",
-        payments: "/api/policyholder/mypayments",
+        payments: "/api/policyholder/payment",
         status: "/api/policyholder/mystatus",
         about: "/api/policyholder/profile/display",
-        help: "/api/support",
+        help: "/api/policyholder/help",
       };
 
       if (!(type in endpoints)) {
@@ -92,14 +92,14 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
 
       if (!res.ok) {
         await res.json().catch(() => ({}));
-        setError("Failed to fetch data.");
+        setError("Coming Soon");
         return;
       }
 
       const data = await res.json();
       setDataMap((prev) => ({ ...prev, [type]: data }));
     } catch {
-      setError("An unexpected error occurred.");
+      setError("This section is under development and will be available soon.");
     } finally {
       setLoading(false);
     }
@@ -585,15 +585,19 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
 
           {/* Error State */}
           {error && (
-            <div className="mb-6 p-4 bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl">
+            <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-100 rounded-lg">
-                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                <div className="p-2 bg-amber-100 rounded-lg">
+                  <Clock className="w-5 h-5 text-amber-600" />
                 </div>
-                <p className="text-sm font-medium text-red-800">{error}</p>
+                <div>
+                  <p className="text-sm font-medium text-amber-800">{error}</p>
+                  <p className="text-xs text-amber-600 mt-1">Our team is working on it.</p>
+                </div>
               </div>
             </div>
           )}
+
 
           {/* Loading State */}
           {loading ? (
