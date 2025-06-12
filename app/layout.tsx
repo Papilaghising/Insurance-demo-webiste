@@ -18,10 +18,15 @@ const montserrat = Montserrat({
 })
 
 export const metadata = {
-  title: "TrueClaim | Transforming Insurance Claims with AI",
+  title: "TrueClaim | Transforming Insurance Claioms with AI",
   description:
     "TrueClaim Intel leverages Generative AI to resolve claims in minutes, reduce fraud, and deliver real-time transparency.",
   generator: "v0.dev",
+  icons: {
+    icon: '/favicon.png',
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
+  },
 }
 
 interface RootLayoutProps {
