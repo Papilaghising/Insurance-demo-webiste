@@ -8,7 +8,7 @@ const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY); 
 
 // Replace with your actual user's UUID
-const userId = 'eb9f09ba-e90a-48a9-98ce-dbf9dc177e52';
+const userId = '930a1f85-d36b-471a-9ed6-99d6f628089b';
 
 const updateApprovalStatus = async () => {
   const { data, error } = await supabase.auth.admin.updateUserById(userId, {

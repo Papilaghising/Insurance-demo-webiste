@@ -1,23 +1,36 @@
 import { NextResponse } from "next/server"
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
+import { getSupabase } from "@/lib/supabase"
 
 export async function GET(request: Request) {
   try {
-    // Initialize Supabase client with cookies for server-side auth
-    const cookieStore = cookies()
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+    const supabase = getSupabase()
     
-    // Get the current session
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    // Get the authorization header
+    const authHeader = request.headers.get('authorization')
+    
+    if (!authHeader) {
+      console.error('No authorization header found')
+      return NextResponse.json({ error: 'No authorization header' }, { status: 401 })
     }
 
-    const userId = session.user.id
+    const token = authHeader.split(' ')[1]
+    if (!token) {
+      console.error('No token found in authorization header')
+      return NextResponse.json({ error: 'No token provided' }, { status: 401 })
+    }
+
+    // Get the user from the session
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token)
+    
+    if (userError || !user) {
+      console.error('User error:', userError)
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+    }
+
+    const userId = user.id
     console.log("Fetching profile for user:", userId)
 
-    // Get the user's profile data from profiles table using id
+    // Get the user's profile data from profiles table using user_id
     const { data: profile, error } = await supabase
       .from("profiles")
       .select("*")
@@ -35,8 +48,8 @@ export async function GET(request: Request) {
           .insert([
             {
               id: userId,
-              email: session.user.email,
-              full_name: session.user.user_metadata?.full_name || "",
+              email: user.email,
+              full_name: user.user_metadata?.full_name || "",
             }
           ])
           .select()

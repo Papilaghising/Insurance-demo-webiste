@@ -66,9 +66,10 @@ export async function POST(request: Request) {
           public_status: 'SUBMITTED',
           fraud_risk_score: fraudAnalysis.fraudRiskScore,
           risk_level: fraudAnalysis.riskLevel,
-          key_findings: fraudAnalysis.keyFindings
+          key_findings: fraudAnalysis.keyFindings,
+          recommendation: fraudAnalysis.recommendation
         }])
-        .select('claim_id, email, full_name, phone, policy_number, claim_type, date_of_incident, incident_location, incident_description, claim_amount, public_status, fraud_risk_score, risk_level, key_findings')
+        .select('claim_id, email, full_name, phone, policy_number, claim_type, date_of_incident, incident_location, incident_description, claim_amount, public_status, fraud_risk_score, risk_level, key_findings,recommendation')
         .single()
 
       if (claimError) {

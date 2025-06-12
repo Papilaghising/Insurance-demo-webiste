@@ -15,6 +15,7 @@ interface Claim {
   created_at: string;
   incident_location?: string;
   risk_level?: string;
+  recommendation?: 'APPROVE' | 'REJECT' | 'REVIEW';
 }
 
 interface StatusSummary {
@@ -46,7 +47,6 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
   const handleSignOut = async () => {
     try {
       await signOut();
-      router.push("/");
     } catch (err) {
       console.error("Failed to sign out:", err);
     }
@@ -58,12 +58,12 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
       setError(null);
 
       const endpoints: Record<string, string> = {
-        policies: "/api/policyholder/mypolicies",
+        policies: "/api/policyholder/policies",
         claims: "/api/policyholder/myclaims",
-        payments: "/api/policyholder/mypayments",
+        payments: "/api/policyholder/payment",
         status: "/api/policyholder/mystatus",
         about: "/api/policyholder/profile/display",
-        help: "/api/support",
+        help: "/api/policyholder/help",
       };
 
       if (!(type in endpoints)) {
@@ -92,14 +92,14 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
 
       if (!res.ok) {
         await res.json().catch(() => ({}));
-        setError("Failed to fetch data.");
+        setError("Coming Soon");
         return;
       }
 
       const data = await res.json();
       setDataMap((prev) => ({ ...prev, [type]: data }));
     } catch {
-      setError("An unexpected error occurred.");
+      setError("This section is under development and will be available soon.");
     } finally {
       setLoading(false);
     }
@@ -128,6 +128,15 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
     return styles[level] || "bg-gradient-to-r from-gray-500 to-slate-500 text-white";
   };
 
+  const getRecommendationBadgeClasses = (recommendation?: string): string => {
+    const styles: Record<string, string> = {
+      APPROVE: "bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 border border-emerald-200",
+      REJECT: "bg-gradient-to-r from-red-50 to-rose-50 text-red-700 border border-red-200",
+      REVIEW: "bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border border-amber-200",
+    };
+    return styles[recommendation?.toUpperCase() || ''] || "bg-gradient-to-r from-gray-50 to-slate-50 text-gray-700 border border-gray-200";
+  };
+
   const getTabIcon = (tab: string) => {
     const icons: Record<string, React.ReactNode> = {
       policies: <Shield className="w-5 h-5" />,
@@ -153,7 +162,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
         title: "Total Claims",
         value: claims.length,
         icon: <FileText className="w-6 h-6" />,
-        color: "from-blue-500 to-indigo-600",
+        color: "from-blue-500 to-blue-600",
         textColor: "text-blue-600",
         bgColor: "bg-blue-50"
       },
@@ -220,7 +229,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
             <p className="text-gray-500 mb-6">You haven't submitted any claims yet. Start by submitting your first claim.</p>
             <button
               onClick={() => router.push('/dashboard/claims/submit')}
-              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/40"
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-[#0288D1] to-[#29B6F6] text-white rounded-xl hover:from-[#0277BD] hover:to-[#0288D1] transition-all duration-200 shadow-lg shadow-[#0288D1]/25 hover:shadow-xl hover:shadow-[#0288D1]/40"
             >
               <Plus className="w-4 h-4 mr-2" />
               Submit New Claim
@@ -278,7 +287,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                 
                 <button
                   onClick={() => router.push('/dashboard/claims/submit')}
-                  className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/40 text-sm font-medium whitespace-nowrap"
+                  className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-[#0288D1] to-[#29B6F6] text-white rounded-xl hover:from-[#0277BD] hover:to-[#0288D1] transition-all duration-200 shadow-lg shadow-[#0288D1]/25 hover:shadow-xl hover:shadow-[#0288D1]/40 text-sm font-medium whitespace-nowrap"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   New Claim
@@ -296,14 +305,15 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Result</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Description</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Location</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
-            </tr>
-          </thead>
+                </tr>
+              </thead>
               <tbody className="divide-y divide-gray-50">
                 {filteredClaims.map((claim, idx) => (
-                  <tr key={idx} className="group hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/50 transition-all duration-200">
+                  <tr key={idx} className="group hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-sky-50/50 transition-all duration-200">
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         <span className="font-mono text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">
@@ -312,7 +322,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-indigo-50 to-blue-50 text-indigo-700 border border-indigo-100">
+                      <span className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-blue-80 to-sky-50 text-blue-700 border border-blue-100">
                         {claim.claim_type}
                       </span>
                     </td>
@@ -340,6 +350,11 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                       </span>
                     </td>
                     <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ${getRecommendationBadgeClasses(claim.recommendation)}`}>
+                        {claim.recommendation || 'PENDING'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
                       <div className="max-w-xs">
                         <p className="text-sm text-gray-600 line-clamp-2" title={claim.incident_description}>
                           {claim.incident_description}
@@ -359,11 +374,11 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                         <Eye className="w-4 h-4 mr-1 group-hover:scale-110 transition-transform duration-200" />
                         View
                       </button>
-                  </td>
+                    </td>
                   </tr>
-            ))}
-          </tbody>
-        </table>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -397,8 +412,8 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                 <p className="text-sm text-gray-500">Track the progress of your submitted claims</p>
               </div>
               <div className="flex items-center space-x-2">
-                <Sparkles className="w-5 h-5 text-indigo-500" />
-                <span className="text-sm font-medium text-indigo-600">Live Updates</span>
+                <Sparkles className="w-5 h-5 text-blue-500" />
+                <span className="text-sm font-medium text-blue-600">Live Updates</span>
               </div>
             </div>
           </div>
@@ -407,23 +422,23 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
             <table className="min-w-full divide-y divide-gray-100">
               <thead>
                 <tr className="bg-gradient-to-r from-slate-50 to-gray-50">
-                  {["Claim ID", "Type", "Submitted Date", "Amount", "Status", "Risk Level", "Action"].map((col) => (
+                  {["Claim ID", "Type", "Submitted Date", "Amount", "Status", "Result", "Risk Level", "Action"].map((col) => (
                     <th key={col} className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       {col}
                     </th>
                   ))}
-            </tr>
-          </thead>
+                </tr>
+              </thead>
               <tbody className="divide-y divide-gray-50">
-            {claims.map((claim, idx) => (
-                  <tr key={idx} className="group hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/50 transition-all duration-200">
+                {claims.map((claim, idx) => (
+                  <tr key={idx} className="group hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-sky-50/50 transition-all duration-200">
                     <td className="px-6 py-4">
                       <span className="font-mono text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">
                         {claim.claim_id}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-indigo-50 to-blue-50 text-indigo-700 border border-indigo-100">
+                      <span className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-blue-80 to-sky-50 text-blue-700 border border-blue-100">
                         {claim.claim_type}
                       </span>
                     </td>
@@ -432,7 +447,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                         <Calendar className="w-4 h-4 mr-2 text-gray-400" />
                         {new Date(claim.created_at).toLocaleDateString()}
                       </div>
-                </td>
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         <DollarSign className="w-4 h-4 text-emerald-500 mr-1" />
@@ -440,12 +455,17 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                           {claim.claim_amount.toLocaleString()}
                         </span>
                       </div>
-                </td>
+                    </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ${getStatusBadgeClasses(claim.public_status)}`}>
                         {claim.public_status.replace("_", " ")}
-                  </span>
-                </td>
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ${getRecommendationBadgeClasses(claim.recommendation)}`}>
+                        {claim.recommendation || 'PENDING'}
+                      </span>
+                    </td>
                     <td className="px-6 py-4">
                       {claim.risk_level && (
                         <span className={`inline-flex items-center px-3 py-1 text-xs font-bold rounded-full ${getRiskLevelClasses(claim.risk_level)}`}>
@@ -455,16 +475,16 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <button className="group inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 hover:text-blue-700 transition-all duration-200">
+                      <button className="group inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-80 rounded-lg hover:bg-blue-100 hover:text-blue-700 transition-all duration-200">
                         <Eye className="w-4 h-4 mr-1 group-hover:scale-110 transition-transform duration-200" />
                         View
                       </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     );
@@ -476,24 +496,24 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
       : (dataMap[activeTab] as any[]) || [];
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/40">
+    <div className="flex h-screen bg-gradient-to-br from-[#0288D1]/5 via-[#0288D1]/10 to-[#01579B]/10">
       {/* Sidebar */}
-      <aside className="w-72 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white flex flex-col relative overflow-hidden">
+      <aside className="w-72 bg-gradient-to-br from-[#0288D1] via-[#0277BD] to-[#01579B] text-white flex flex-col relative overflow-hidden">
         {/* Background decoration */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-purple-600/10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#29B6F6]/10 to-[#0288D1]/10" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-white/5 to-transparent rounded-full blur-3xl transform translate-x-32 -translate-y-32" />
         
         <div className="relative z-10 p-6">
           {/* Header */}
           <div className="flex items-center gap-4 p-4 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/20 mb-8 hover:bg-white/15 transition-all duration-300">
-            <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+            <div className="p-3 bg-gradient-to-br from-[#29B6F6] to-[#0288D1] rounded-xl shadow-lg">
               <UserCircle className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+              <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-[#E1F5FE] bg-clip-text text-transparent">
                 Dashboard
               </h1>
-              <p className="text-blue-200 text-sm">Insurance Portal</p>
+              <p className="text-[#E1F5FE] text-sm">Insurance Portal</p>
             </div>
           </div>
 
@@ -565,22 +585,26 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
 
           {/* Error State */}
           {error && (
-            <div className="mb-6 p-4 bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl">
+            <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-100 rounded-lg">
-                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                <div className="p-2 bg-amber-100 rounded-lg">
+                  <Clock className="w-5 h-5 text-amber-600" />
                 </div>
-                <p className="text-sm font-medium text-red-800">{error}</p>
+                <div>
+                  <p className="text-sm font-medium text-amber-800">{error}</p>
+                  <p className="text-xs text-amber-600 mt-1">Our team is working on it.</p>
+                </div>
               </div>
             </div>
           )}
+
 
           {/* Loading State */}
           {loading ? (
             <div className="flex flex-col items-center justify-center py-16">
               <div className="relative">
                 <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-                <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-indigo-400 rounded-full animate-spin animate-reverse"></div>
+                <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-blue-400 rounded-full animate-spin animate-reverse"></div>
               </div>
               <p className="mt-4 text-gray-600 font-medium">Loading your data...</p>
             </div>
@@ -592,7 +616,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
               {activeTab !== "claims" && activeTab !== "status" && activeTab !== "about" && (
                 <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
                   <div className="max-w-sm mx-auto">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-[#29B6F6] to-[#0288D1] rounded-full flex items-center justify-center text-white">
                       {getTabIcon(activeTab)}
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Coming Soon</h3>
