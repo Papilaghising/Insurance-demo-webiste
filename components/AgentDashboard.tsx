@@ -70,12 +70,12 @@ export default function AgentDashboard({ user }: { user: User }) {
 
   const handleSignOut = async () => {
     try {
-      await signOut()
-      router.push("/")
+      await signOut();
+      // The signOut function now handles the redirection
     } catch (err) {
-      console.error("Failed to sign out:", err)
+      console.error("Failed to sign out:", err);
     }
-  }
+  };
 
   const fetchData = async (type: string) => {
     setLoading(true)

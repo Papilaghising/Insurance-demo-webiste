@@ -1,12 +1,23 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
-export async function GET() {
-  try {
-    const cookieStore = cookies()
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+export async function GET(request: Request) {
+  const cookieStore = cookies()
+  
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get: (name: string) => cookieStore.get(name)?.value,
+        set: (name: string, value: string, options: CookieOptions) => cookieStore.set(name, value, options),
+        remove: (name: string, options: CookieOptions) => cookieStore.set(name, '', { ...options, maxAge: 0 }),
+      },
+    }
+  )
 
+  try {
     const { data: { session }, error } = await supabase.auth.getSession()
 
     if (error) {
@@ -25,23 +36,37 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const requestUrl = new URL(request.url)
-  const supabase = createRouteHandlerClient({ cookies })
+  const cookieStore = cookies()
+  
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get: (name: string) => cookieStore.get(name)?.value,
+        set: (name: string, value: string, options: CookieOptions) => cookieStore.set(name, value, {
+          ...options,
+          sameSite: 'lax',
+          secure: process.env.NODE_ENV === 'production',
+        }),
+        remove: (name: string, options: CookieOptions) => cookieStore.set(name, '', { ...options, maxAge: 0 }),
+      },
+    }
+  )
 
   try {
     const { session } = await request.json()
 
     if (session) {
-      // Set session cookie
-      const response = new NextResponse(JSON.stringify({ message: 'Session updated' }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      })
-
-      // Set cookie with session
       await supabase.auth.setSession(session)
-
-      return response
+      
+      return NextResponse.json(
+        { message: 'Session updated' },
+        { 
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
     }
 
     return NextResponse.json({ error: 'No session provided' }, { status: 400 })
@@ -51,14 +76,45 @@ export async function POST(request: Request) {
   }
 }
 
-export async function DELETE() {
-  const supabase = createRouteHandlerClient({ cookies })
+export async function DELETE(request: Request) {
+  const cookieStore = cookies()
+  
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get: (name: string) => cookieStore.get(name)?.value,
+        set: (name: string, value: string, options: CookieOptions) => cookieStore.set(name, value, options),
+        remove: (name: string, options: CookieOptions) => cookieStore.set(name, '', { ...options, maxAge: 0 }),
+      },
+    }
+  )
 
   try {
-    // Sign out and clear session
     await supabase.auth.signOut()
+    
+    const response = NextResponse.json(
+      { message: 'Signed out successfully' },
+      { status: 200 }
+    )
 
-    return NextResponse.json({ message: 'Signed out successfully' })
+    // Clear all Supabase-related cookies
+    const cookieOptions = {
+      path: '/',
+      maxAge: 0,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax' as const
+    }
+
+    response.cookies.set('sb-access-token', '', cookieOptions)
+    response.cookies.set('sb-refresh-token', '', cookieOptions)
+    response.cookies.set('supabase-auth-token', '', cookieOptions)
+    response.cookies.set('sb-auth-token', '', cookieOptions)
+    response.cookies.set('sb-token', '', cookieOptions)
+    
+    return response
   } catch (error) {
     console.error('Sign out error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

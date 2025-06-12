@@ -230,12 +230,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       const supabase = getSupabase()
+      
+      // First clear all cookies and local storage
+      const cookies = document.cookie.split(';');
+      
+      for (let cookie of cookies) {
+        const cookieName = cookie.split('=')[0].trim();
+        document.cookie = `${cookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; domain=${window.location.hostname}`;
+      }
+      
+      localStorage.clear();
+      
+      // Then sign out from Supabase
       await supabase.auth.signOut()
       
       // Clear session on the server
       await fetch('/api/auth/session', {
         method: 'DELETE',
       })
+
+      // Reset auth context state
+      setUser(null)
+      setSession(null)
+      setRole(null)
+      
+      // Finally, redirect to login
+      window.location.href = '/login'
     } catch (error) {
       console.error("Sign out error:", error)
     }

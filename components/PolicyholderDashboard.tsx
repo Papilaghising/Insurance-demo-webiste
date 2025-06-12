@@ -47,7 +47,6 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
   const handleSignOut = async () => {
     try {
       await signOut();
-      router.push("/");
     } catch (err) {
       console.error("Failed to sign out:", err);
     }

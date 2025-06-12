@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
+import { getSupabase } from "@/lib/supabase"
 
 interface ProfileData {
   full_name: string
@@ -36,10 +37,21 @@ export default function ProfileDisplay() {
           return
         }
 
+        // Get the session token
+        const supabase = getSupabase()
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (!session) {
+          setError("Please sign in to view your profile")
+          setLoading(false)
+          return
+        }
+
         const res = await fetch("/api/policyholder/profile/display", {
           credentials: "include",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session.access_token}`
           }
         })
 
@@ -77,11 +89,21 @@ export default function ProfileDisplay() {
 
     try {
       setSaving(true)
+      
+      // Get the session token
+      const supabase = getSupabase()
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session) {
+        throw new Error("No active session")
+      }
+
       const res = await fetch("/api/policyholder/profile/update", {
         method: "PUT",
         credentials: "include",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`
         },
         body: JSON.stringify(editedProfile)
       })
