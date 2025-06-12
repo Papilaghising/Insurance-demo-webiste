@@ -306,7 +306,7 @@ export default function AgentDashboard({ user }: { user: User }) {
         <table className="min-w-full bg-white text-sm">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-3 text-left font-semibold text-gray-900">Name</th>
+              <th className="px-4 py-3 text-left font-semibold text-gray-900">User Id</th>
               <th className="px-4 py-3 text-left font-semibold text-gray-900">Email</th>
               <th className="px-4 py-3 text-left font-semibold text-gray-900">Phone</th>
               <th className="px-4 py-3 text-left font-semibold text-gray-900">Policy Count</th>
@@ -317,18 +317,12 @@ export default function AgentDashboard({ user }: { user: User }) {
           </thead>
           <tbody className="divide-y divide-gray-200">
             {data.map((policyholder, idx) => (
-              <tr key={idx} className="hover:bg-gray-50">
+              <tr className="hover:bg-gray-50">
                 <td className="px-4 py-3">
                   <div className="flex items-center">
-                    <div className="h-8 w-8 flex-shrink-0 rounded-full bg-blue-100 flex items-center justify-center">
-                      <span className="font-medium text-blue-800">
-                        {policyholder.name?.charAt(0)?.toUpperCase() || '?'}
-                      </span>
-                    </div>
-                    <div className="ml-3">
-                      <div className="font-medium text-gray-900">{policyholder.name}</div>
-                      <div className="text-gray-500 text-xs">ID: {policyholder.id}</div>
-                    </div>
+                    <span className="px-1 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {policyholder.user_id}
+                    </span>
                   </div>
                 </td>
                 <td className="px-4 py-3 text-gray-600">{policyholder.email}</td>
@@ -337,9 +331,9 @@ export default function AgentDashboard({ user }: { user: User }) {
                   <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                     {policyholder.policy_count || 0} policies
                   </span>
-                </td>y
+                </td>
                 <td className="px-4 py-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  <span className={`px-4 py-3 rounded-full text-xs font-medium ${
                     policyholder.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
                     policyholder.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
                     'bg-gray-100 text-gray-800'
