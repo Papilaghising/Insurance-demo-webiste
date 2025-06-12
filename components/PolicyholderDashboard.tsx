@@ -162,7 +162,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
         title: "Total Claims",
         value: claims.length,
         icon: <FileText className="w-6 h-6" />,
-        color: "from-blue-500 to-indigo-600",
+        color: "from-blue-500 to-blue-600",
         textColor: "text-blue-600",
         bgColor: "bg-blue-50"
       },
@@ -229,7 +229,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
             <p className="text-gray-500 mb-6">You haven't submitted any claims yet. Start by submitting your first claim.</p>
             <button
               onClick={() => router.push('/dashboard/claims/submit')}
-              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/40"
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-[#0288D1] to-[#29B6F6] text-white rounded-xl hover:from-[#0277BD] hover:to-[#0288D1] transition-all duration-200 shadow-lg shadow-[#0288D1]/25 hover:shadow-xl hover:shadow-[#0288D1]/40"
             >
               <Plus className="w-4 h-4 mr-2" />
               Submit New Claim
@@ -287,7 +287,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                 
                 <button
                   onClick={() => router.push('/dashboard/claims/submit')}
-                  className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/40 text-sm font-medium whitespace-nowrap"
+                  className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-[#0288D1] to-[#29B6F6] text-white rounded-xl hover:from-[#0277BD] hover:to-[#0288D1] transition-all duration-200 shadow-lg shadow-[#0288D1]/25 hover:shadow-xl hover:shadow-[#0288D1]/40 text-sm font-medium whitespace-nowrap"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   New Claim
@@ -313,7 +313,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {filteredClaims.map((claim, idx) => (
-                  <tr key={idx} className="group hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/50 transition-all duration-200">
+                  <tr key={idx} className="group hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-sky-50/50 transition-all duration-200">
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         <span className="font-mono text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">
@@ -322,7 +322,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-indigo-50 to-blue-50 text-indigo-700 border border-indigo-100">
+                      <span className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-blue-80 to-sky-50 text-blue-700 border border-blue-100">
                         {claim.claim_type}
                       </span>
                     </td>
@@ -412,8 +412,8 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                 <p className="text-sm text-gray-500">Track the progress of your submitted claims</p>
               </div>
               <div className="flex items-center space-x-2">
-                <Sparkles className="w-5 h-5 text-indigo-500" />
-                <span className="text-sm font-medium text-indigo-600">Live Updates</span>
+                <Sparkles className="w-5 h-5 text-blue-500" />
+                <span className="text-sm font-medium text-blue-600">Live Updates</span>
               </div>
             </div>
           </div>
@@ -431,14 +431,14 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {claims.map((claim, idx) => (
-                  <tr key={idx} className="group hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/50 transition-all duration-200">
+                  <tr key={idx} className="group hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-sky-50/50 transition-all duration-200">
                     <td className="px-6 py-4">
                       <span className="font-mono text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">
                         {claim.claim_id}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-indigo-50 to-blue-50 text-indigo-700 border border-indigo-100">
+                      <span className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-blue-80 to-sky-50 text-blue-700 border border-blue-100">
                         {claim.claim_type}
                       </span>
                     </td>
@@ -475,7 +475,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <button className="group inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 hover:text-blue-700 transition-all duration-200">
+                      <button className="group inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-80 rounded-lg hover:bg-blue-100 hover:text-blue-700 transition-all duration-200">
                         <Eye className="w-4 h-4 mr-1 group-hover:scale-110 transition-transform duration-200" />
                         View
                       </button>
@@ -496,24 +496,24 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
       : (dataMap[activeTab] as any[]) || [];
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/40">
+    <div className="flex h-screen bg-gradient-to-br from-[#0288D1]/5 via-[#0288D1]/10 to-[#01579B]/10">
       {/* Sidebar */}
-      <aside className="w-72 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white flex flex-col relative overflow-hidden">
+      <aside className="w-72 bg-gradient-to-br from-[#0288D1] via-[#0277BD] to-[#01579B] text-white flex flex-col relative overflow-hidden">
         {/* Background decoration */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-purple-600/10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#29B6F6]/10 to-[#0288D1]/10" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-white/5 to-transparent rounded-full blur-3xl transform translate-x-32 -translate-y-32" />
         
         <div className="relative z-10 p-6">
           {/* Header */}
           <div className="flex items-center gap-4 p-4 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/20 mb-8 hover:bg-white/15 transition-all duration-300">
-            <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+            <div className="p-3 bg-gradient-to-br from-[#29B6F6] to-[#0288D1] rounded-xl shadow-lg">
               <UserCircle className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+              <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-[#E1F5FE] bg-clip-text text-transparent">
                 Dashboard
               </h1>
-              <p className="text-blue-200 text-sm">Insurance Portal</p>
+              <p className="text-[#E1F5FE] text-sm">Insurance Portal</p>
             </div>
           </div>
 
@@ -604,7 +604,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
             <div className="flex flex-col items-center justify-center py-16">
               <div className="relative">
                 <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-                <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-indigo-400 rounded-full animate-spin animate-reverse"></div>
+                <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-blue-400 rounded-full animate-spin animate-reverse"></div>
               </div>
               <p className="mt-4 text-gray-600 font-medium">Loading your data...</p>
             </div>
@@ -616,7 +616,7 @@ export default function PolicyholderDashboard({ user }: { user: any }) {
               {activeTab !== "claims" && activeTab !== "status" && activeTab !== "about" && (
                 <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
                   <div className="max-w-sm mx-auto">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-[#29B6F6] to-[#0288D1] rounded-full flex items-center justify-center text-white">
                       {getTabIcon(activeTab)}
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Coming Soon</h3>

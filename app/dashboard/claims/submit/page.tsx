@@ -85,7 +85,7 @@ const FileUpload = ({
       <div
         className={`relative border-2 border-dashed rounded-xl p-6 transition-all duration-300 ${
           dragActive
-            ? 'border-blue-400 bg-blue-50'
+            ? 'border-[#0288D1] bg-[#E1F5FE]'
             : file
             ? 'border-green-300 bg-green-50'
             : 'border-gray-300 hover:border-gray-400 bg-gray-50'
@@ -141,12 +141,12 @@ const FormSection = ({
   isActive?: boolean;
 }) => (
   <div className={`bg-white rounded-2xl shadow-sm border transition-all duration-300 ${
-    isActive ? 'ring-2 ring-blue-500 shadow-lg' : 'hover:shadow-md'
+    isActive ? 'ring-2 ring-[#0288D1] shadow-lg' : 'hover:shadow-md'
   }`}>
     <div className="p-6 border-b border-gray-100">
       <div className="flex items-center space-x-3">
         <div className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors duration-300 ${
-          isActive ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'
+          isActive ? 'bg-[#0288D1] text-white' : 'bg-gray-100 text-gray-600'
         }`}>
           <Icon className="w-5 h-5" />
         </div>
@@ -198,7 +198,7 @@ const InputField = ({
         onChange={onChange}
         required={required}
         placeholder={placeholder}
-        className={`block w-full rounded-xl border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors duration-200 ${
+        className={`block w-full rounded-xl border-gray-300 shadow-sm focus:border-[#0288D1] focus:ring-[#0288D1] transition-colors duration-200 ${
           Icon ? 'pl-10' : ''
         } py-3 px-4`}
         {...props}
@@ -233,7 +233,7 @@ const TextAreaField = ({
       required={required}
       placeholder={placeholder}
       rows={rows}
-      className="block w-full rounded-xl border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors duration-200 py-3 px-4"
+      className="block w-full rounded-xl border-gray-300 shadow-sm focus:border-[#0288D1] focus:ring-[#0288D1] transition-colors duration-200 py-3 px-4"
     />
   </div>
 );
@@ -262,7 +262,7 @@ const SelectField = ({
       value={value}
       onChange={onChange}
       required={required}
-      className="block w-full rounded-xl border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors duration-200 py-3 px-4"
+      className="block w-full rounded-xl border-gray-300 shadow-sm focus:border-[#0288D1] focus:ring-[#0288D1] transition-colors duration-200 py-3 px-4"
     >
       <option value="">{placeholder}</option>
       {options.map((option) => (
@@ -439,16 +439,16 @@ export default function SubmitClaimPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-[#0288D1]/5 via-[#0288D1]/10 to-[#01579B]/10 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-3xl shadow-xl border border-gray-1000 overflow-hidden">
             {/* Success Header */}
-            <div className="bg-gradient-to-r from-green-500 to-emerald-500 px-8 py-12 text-center">
+            <div className="bg-gradient-to-r from-[#0288D1] to-[#0277BD] px-8 py-12 text-center">
               <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full mb-6">
-                <CheckCircleIcon className="w-12 h-12 text-green-500" />
+                <CheckCircleIcon className="w-12 h-12 text-[#0288D1]" />
               </div>
               <h2 className="text-3xl font-bold text-white mb-2">Claim Submitted Successfully!</h2>
-              <p className="text-green-100 text-lg">Your claim is now being processed and will be reviewed shortly.</p>
+              <p className="text-[#E1F5FE] text-lg">Your claim is now being processed and will be reviewed shortly.</p>
             </div>
 
             {/* Claim Details */}
@@ -611,7 +611,7 @@ export default function SubmitClaimPage() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
                   onClick={() => router.push('/dashboard')}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  className="flex-1 bg-gradient-to-r from-[#0288D1] to-[#0277BD] hover:from-[#0277BD] hover:to-[#01579B] text-white font-medium py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
                 >
                   Go to Dashboard
                 </button>
@@ -635,7 +635,7 @@ export default function SubmitClaimPage() {
                       consent: false,
                     });
                   }}
-                  className="flex-1 bg-white hover:bg-gray-50 text-gray-700 font-medium py-4 px-6 rounded-xl transition-all duration-200 border-2 border-gray-200 hover:border-gray-300"
+                  className="flex-1 bg-white hover:bg-gray-50 text-gray-1000 font-medium py-4 px-6 rounded-xl transition-all duration-200 border-2 border-gray-200 hover:border-gray-300"
                 >
                   Submit Another Claim
                 </button>
@@ -648,12 +648,12 @@ export default function SubmitClaimPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#0288D1]/5 via-[#0288D1]/10 to-[#01579B]/10 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-6">
-            <ClipboardDocumentCheckIcon className="w-8 h-8 text-blue-600" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#E1F5FE] rounded-full mb-6">
+            <ClipboardDocumentCheckIcon className="w-8 h-8 text-[#0288D1]" />
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Submit Your Claim</h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
@@ -714,6 +714,7 @@ export default function SubmitClaimPage() {
             icon={DocumentTextIcon} 
             title="Policy Information" 
             step={2}
+            isActive={true}
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <InputField
@@ -751,6 +752,7 @@ export default function SubmitClaimPage() {
             icon={ExclamationTriangleIcon} 
             title="Incident Details" 
             step={3}
+            isActive={true}
           >
             <InputField
               label="Location of Incident"
@@ -795,6 +797,7 @@ export default function SubmitClaimPage() {
             icon={CurrencyDollarIcon} 
             title="Claim Amount" 
             step={4}
+            isActive={true}
           >
             <InputField
               label="Estimated Claim Amount"
@@ -811,7 +814,6 @@ export default function SubmitClaimPage() {
           </FormSection>
 
           {/* Step 5: Consent and Submission */}
-          <div className="bg-white rounded-2xl shadow-sm border p-6">
             <div className="flex items-start space-x-3">
               <input
                 type="checkbox"
@@ -819,7 +821,7 @@ export default function SubmitClaimPage() {
                 checked={form.consent}
                 onChange={handleChange}
                 required
-                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="mt-1 h-4 w-4 text-[#0288D1] focus:ring-[#0288D1] border-gray-300 rounded"
               />
               <div className="flex-1">
                 <label className="text-sm font-medium text-gray-900">
@@ -830,7 +832,6 @@ export default function SubmitClaimPage() {
                 </p>
               </div>
             </div>
-          </div>
 
           {/* Error Message */}
           {error && (
@@ -847,7 +848,7 @@ export default function SubmitClaimPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 shadow-lg hover:shadow-xl disabled:shadow-md flex items-center justify-center space-x-2"
+              className="flex-1 bg-gradient-to-r from-[#0288D1] to-[#0277BD] hover:from-[#0277BD] hover:to-[#01579B] disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 shadow-lg hover:shadow-xl disabled:shadow-md flex items-center justify-center space-x-2"
             >
               {submitting ? (
                 <>

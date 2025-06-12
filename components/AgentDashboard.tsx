@@ -393,158 +393,271 @@ export default function AgentDashboard({ user }: { user: User }) {
   // If not mounted yet, show a loading state or nothing
   if (!mounted) {
     return (
-      <div className="flex h-screen bg-gray-100 items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="flex h-screen bg-gradient-to-br from-[#0288D1]/5 via-[#0288D1]/10 to-[#01579B]/10">
+        {/* Sidebar */}
+        <aside className="w-72 bg-gradient-to-br from-[#0288D1] via-[#0277BD] to-[#01579B] text-white flex flex-col relative overflow-hidden">
+          {/* Background decoration */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#29B6F6]/10 to-[#0288D1]/10" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-white/5 to-transparent rounded-full blur-3xl transform translate-x-32 -translate-y-32" />
+          
+          <div className="relative z-10 p-6">
+            {/* Header */}
+            <div className="flex items-center gap-4 p-4 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/20 mb-8 hover:bg-white/15 transition-all duration-300">
+              <div className="p-3 bg-gradient-to-br from-[#29B6F6] to-[#0288D1] rounded-xl shadow-lg">
+                <UserCircle className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-[#E1F5FE] bg-clip-text text-transparent">
+                  Agent Dashboard
+                </h1>
+                <p className="text-[#E1F5FE] text-sm">Insurance Portal</p>
+              </div>
+            </div>
+
+            {/* Navigation */}
+            <nav className="space-y-2">
+              {["policyholders", "policies", "claims"].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab as "policyholders" | "policies" | "claims")}
+                  className={`w-full group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 ${
+                    activeTab === tab
+                      ? "bg-white text-[#0288D1] shadow-xl shadow-[#0288D1]/20 font-semibold transform translate-x-1"
+                      : "text-[#E1F5FE] hover:bg-white/15 hover:text-white hover:translate-x-1"
+                  }`}
+                >
+                  <div className={`p-2 rounded-lg transition-all duration-300 ${
+                    activeTab === tab 
+                      ? "bg-[#E1F5FE] text-[#0288D1]" 
+                      : "bg-white/10 text-[#E1F5FE] group-hover:bg-white/20 group-hover:text-white"
+                  }`}>
+                    {tab === "policyholders" && <Users className="w-5 h-5" />}
+                    {tab === "policies" && <ShieldCheck className="w-5 h-5" />}
+                    {tab === "claims" && <FileText className="w-5 h-5" />}
+                  </div>
+                  <span className="capitalize font-medium">
+                    {tab.replace("_", " ")}
+                  </span>
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          {/* Sign out button */}
+          <div className="relative z-10 mt-auto p-6 border-t border-white/10">
+            <button 
+              onClick={handleSignOut}
+              className="w-full group flex items-center gap-3 px-4 py-3 text-sm text-[#E1F5FE] hover:text-white hover:bg-white/15 rounded-xl transition-all duration-300"
+            >
+              <div className="p-2 bg-white/10 rounded-lg group-hover:bg-white/20 transition-all duration-300">
+                <LogOut className="w-4 h-4" />
+              </div>
+              <span className="font-medium">Sign Out</span>
+            </button>
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="max-w-7xl mx-auto p-8">
+            {/* Header */}
+            <div className="flex justify-between items-start mb-8">
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-white rounded-xl shadow-sm">
+                    {activeTab === "policyholders" && <Users className="w-5 h-5 text-[#0288D1]" />}
+                    {activeTab === "policies" && <ShieldCheck className="w-5 h-5 text-[#0288D1]" />}
+                    {activeTab === "claims" && <FileText className="w-5 h-5 text-[#0288D1]" />}
+                  </div>
+                  <h2 className="text-3xl font-bold text-gray-900 capitalize">
+                    {activeTab.replace("_", " ")}
+                  </h2>
+                </div>
+                <p className="text-gray-600 text-lg">
+                  {activeTab === "policyholders" && "View and manage your policyholders"}
+                  {activeTab === "policies" && "Track all insurance policies"}
+                  {activeTab === "claims" && "Review and process insurance claims"}
+                </p>
+              </div>
+            </div>
+
+            {/* Error State */}
+            {error && (
+              <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-amber-100 rounded-lg">
+                    <AlertTriangle className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-amber-800">{error}</p>
+                    <p className="text-xs text-amber-600 mt-1">Please try again or contact support if the issue persists.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Loading State */}
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-16">
+                <div className="relative">
+                  <div className="w-16 h-16 border-4 border-[#E1F5FE] border-t-[#0288D1] rounded-full animate-spin"></div>
+                  <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-[#29B6F6] rounded-full animate-spin animate-reverse"></div>
+                </div>
+                <p className="mt-4 text-gray-600 font-medium">Loading data...</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {activeTab === "claims" && renderClaimsTable(claims)}
+                {activeTab === "policyholders" && renderPolicyholdersTable(policyholders)}
+                {activeTab === "policies" && (
+                  <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+                    <div className="max-w-sm mx-auto">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-[#29B6F6] to-[#0288D1] rounded-full flex items-center justify-center text-white">
+                        <ShieldCheck className="w-8 h-8" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Coming Soon</h3>
+                      <p className="text-gray-500">This section is under development and will be available soon.</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gradient-to-br from-[#0288D1]/5 via-[#0288D1]/10 to-[#01579B]/10">
       {/* Sidebar */}
-      <aside className="w-64 bg-blue-900 text-white flex flex-col px-6 py-8 shadow-xl">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="p-2 bg-blue-800 rounded-lg">
-            <ShieldCheck className="w-6 h-6" />
-          </div>
-          <h1 className="text-xl font-bold tracking-tight">Agent Portal</h1>
-        </div>
-
-        <nav className="flex-1 space-y-2">
-          {tabButtons.map(({ key, label, icon }) => (
-          <button
-              key={key}
-              onClick={() => setActiveTab(key)}
-              className={`flex items-center w-full px-4 py-3 rounded-lg transition-colors ${
-                activeTab === key 
-                  ? "bg-white text-blue-900 font-medium shadow-sm" 
-                  : "text-blue-100 hover:bg-blue-800"
-              }`}
-            >
-              <span className="mr-3">{icon}</span>
-              {label}
-          </button>
-          ))}
-        </nav>
-
-        <div className="border-t border-blue-800 pt-6">
-          <div className="flex items-center gap-3 mb-4 px-4">
-            <div className="p-2 bg-blue-800 rounded-full">
-              <UserCircle className="w-5 h-5" />
+      <aside className="w-72 bg-gradient-to-br from-[#0288D1] via-[#0277BD] to-[#01579B] text-white flex flex-col relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#29B6F6]/10 to-[#0288D1]/10" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-white/5 to-transparent rounded-full blur-3xl transform translate-x-32 -translate-y-32" />
+        
+        <div className="relative z-10 p-6">
+          {/* Header */}
+          <div className="flex items-center gap-4 p-4 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/20 mb-8 hover:bg-white/15 transition-all duration-300">
+            <div className="p-3 bg-gradient-to-br from-[#29B6F6] to-[#0288D1] rounded-xl shadow-lg">
+              <UserCircle className="w-6 h-6 text-white" />
             </div>
             <div>
-              <div className="font-medium">{user?.name || "Agent"}</div>
-              <div className="text-sm text-blue-300">Insurance Agent</div>
+              <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-[#E1F5FE] bg-clip-text text-transparent">
+                Agent Dashboard
+              </h1>
+              <p className="text-[#E1F5FE] text-sm">Insurance Portal</p>
             </div>
           </div>
-          <button
+
+          {/* Navigation */}
+          <nav className="space-y-2">
+            {["policyholders", "policies", "claims"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab as "policyholders" | "policies" | "claims")}
+                className={`w-full group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 ${
+                  activeTab === tab
+                    ? "bg-white text-[#0288D1] shadow-xl shadow-[#0288D1]/20 font-semibold transform translate-x-1"
+                    : "text-[#E1F5FE] hover:bg-white/15 hover:text-white hover:translate-x-1"
+                }`}
+              >
+                <div className={`p-2 rounded-lg transition-all duration-300 ${
+                  activeTab === tab 
+                    ? "bg-[#E1F5FE] text-[#0288D1]" 
+                    : "bg-white/10 text-[#E1F5FE] group-hover:bg-white/20 group-hover:text-white"
+                }`}>
+                  {tab === "policyholders" && <Users className="w-5 h-5" />}
+                  {tab === "policies" && <ShieldCheck className="w-5 h-5" />}
+                  {tab === "claims" && <FileText className="w-5 h-5" />}
+                </div>
+                <span className="capitalize font-medium">
+                  {tab.replace("_", " ")}
+                </span>
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Sign out button */}
+        <div className="relative z-10 mt-auto p-6 border-t border-white/10">
+          <button 
             onClick={handleSignOut}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-blue-300 hover:text-white transition w-full"
+            className="w-full group flex items-center gap-3 px-4 py-3 text-sm text-[#E1F5FE] hover:text-white hover:bg-white/15 rounded-xl transition-all duration-300"
           >
-            <LogOut className="w-4 h-4" />
-            Sign Out
+            <div className="p-2 bg-white/10 rounded-lg group-hover:bg-white/20 transition-all duration-300">
+              <LogOut className="w-4 h-4" />
+            </div>
+            <span className="font-medium">Sign Out</span>
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-7xl mx-auto px-8 py-8">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Dashboard Overview</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* High Risk Claims Card */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">High Risk Claims</p>
-                    <p className="text-2xl font-bold text-red-600 mt-1">{highRiskClaims}</p>
-                  </div>
-                  <div className="p-2 bg-red-100 rounded-lg">
-                    <AlertTriangle className="w-5 h-5 text-red-600" />
-                  </div>
+        <div className="max-w-7xl mx-auto p-8">
+          {/* Header */}
+          <div className="flex justify-between items-start mb-8">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-white rounded-xl shadow-sm">
+                  {activeTab === "policyholders" && <Users className="w-5 h-5 text-[#0288D1]" />}
+                  {activeTab === "policies" && <ShieldCheck className="w-5 h-5 text-[#0288D1]" />}
+                  {activeTab === "claims" && <FileText className="w-5 h-5 text-[#0288D1]" />}
                 </div>
-                <p className="text-sm text-gray-600 mt-2">
-                  Claims requiring immediate attention
-                </p>
+                <h2 className="text-3xl font-bold text-gray-900 capitalize">
+                  {activeTab.replace("_", " ")}
+                </h2>
               </div>
-
-              {/* Pending Claims Card */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Pending Claims</p>
-                    <p className="text-2xl font-bold text-yellow-600 mt-1">{pendingClaims}</p>
-                  </div>
-                  <div className="p-2 bg-yellow-100 rounded-lg">
-                    <Clock className="w-5 h-5 text-yellow-600" />
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600 mt-2">
-                  Claims awaiting review
-                </p>
-        </div>
-
-              {/* Total Claims Amount Card */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Total Claims Value</p>
-                    <p className="text-2xl font-bold text-green-600 mt-1">
-                      ${totalAmount.toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600 mt-2">
-                  Total value of all claims
-                </p>
-          </div>
-          </div>
-        </div>
-
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">
-                {activeTab === "claims" ? "Recent Claims" :
-                 activeTab === "policyholders" ? "Active Policyholders" :
-                 "Active Policies"}
-              </h3>
-            <button
-              onClick={() => fetchData(activeTab)}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-                Refresh
-            </button>
+              <p className="text-gray-600 text-lg">
+                {activeTab === "policyholders" && "View and manage your policyholders"}
+                {activeTab === "policies" && "Track all insurance policies"}
+                {activeTab === "claims" && "Review and process insurance claims"}
+              </p>
             </div>
+          </div>
 
-            {error && (
-              <div className="rounded-lg bg-red-50 p-4">
-                <div className="flex">
-                  <AlertTriangle className="h-5 w-5 text-red-400" />
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-red-800">Error</h3>
-                    <div className="mt-2 text-sm text-red-700">{error}</div>
-                  </div>
+          {/* Error State */}
+          {error && (
+            <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-100 rounded-lg">
+                  <AlertTriangle className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-amber-800">{error}</p>
+                  <p className="text-xs text-amber-600 mt-1">Please try again or contact support if the issue persists.</p>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {loading ? (
-              <div className="flex justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          {/* Loading State */}
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="relative">
+                <div className="w-16 h-16 border-4 border-[#E1F5FE] border-t-[#0288D1] rounded-full animate-spin"></div>
+                <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-[#29B6F6] rounded-full animate-spin animate-reverse"></div>
               </div>
-            ) : (
-              <>
-                {activeTab === "claims" && renderClaimsTable(claims)}
-                {activeTab === "policyholders" && renderPolicyholdersTable(policyholders)}
-                {activeTab === "policies" && renderPolicyholdersTable(policies)}
-              </>
-            )}
-          </div>
+              <p className="mt-4 text-gray-600 font-medium">Loading data...</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {activeTab === "claims" && renderClaimsTable(claims)}
+              {activeTab === "policyholders" && renderPolicyholdersTable(policyholders)}
+              {activeTab === "policies" && (
+                <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+                  <div className="max-w-sm mx-auto">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-[#29B6F6] to-[#0288D1] rounded-full flex items-center justify-center text-white">
+                      <ShieldCheck className="w-8 h-8" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Coming Soon</h3>
+                    <p className="text-gray-500">This section is under development and will be available soon.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </main>
     </div>
