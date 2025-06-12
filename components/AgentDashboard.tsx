@@ -596,6 +596,61 @@ export default function AgentDashboard({ user }: { user: User }) {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-7xl mx-auto p-8">
+          <div className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Dashboard Overview</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* High Risk Claims Card */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">High Risk Claims</p>
+                      <p className="text-2xl font-bold text-red-600 mt-1">{highRiskClaims}</p>
+                    </div>
+                    <div className="p-2 bg-red-100 rounded-lg">
+                      <AlertTriangle className="w-5 h-5 text-red-600" />
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Claims requiring immediate attention
+                  </p>
+                </div>
+
+                {/* Pending Claims Card */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Pending Claims</p>
+                      <p className="text-2xl font-bold text-yellow-600 mt-1">{pendingClaims}</p>
+                    </div>
+                    <div className="p-2 bg-yellow-100 rounded-lg">
+                      <Clock className="w-5 h-5 text-yellow-600" />
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Claims awaiting review
+                  </p>
+                </div>
+
+                {/* Total Claims Amount Card */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Total Claims Value</p>
+                      <p className="text-2xl font-bold text-green-600 mt-1">
+                        ${totalAmount.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Total value of all claims
+                  </p>
+                  </div>
+              </div>
+          </div>
           {/* Header */}
           <div className="flex justify-between items-start mb-8">
             <div>
